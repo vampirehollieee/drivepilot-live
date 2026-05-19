@@ -153,3 +153,8 @@ I designed and implemented the DrivePilot Live workflow end to end:
 - Built the desktop, mobile, live map, and Market Console frontend views.
 - Added Windows-friendly operational scripts for manual refresh, status checks, and local routines.
 - Sanitized the project into a public GitHub-ready portfolio version without exposing private runtime data.
+
+## Project Documentation
+
+- [Project Case Study](docs/project-docs/drivepilot-project-case-study.pdf)  
+  A public resume-oriented project summary covering product context, system architecture, implementation highlights, privacy handling, AI-assisted development workflow, and roadmap.
