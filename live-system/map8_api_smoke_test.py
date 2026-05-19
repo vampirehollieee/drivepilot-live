@@ -59,7 +59,10 @@ def build_url(base_url: str, params: Dict[str, Any]) -> str:
     return base_url + joiner + query
 
 
-def request_json(base_url: str, params: Dict[str, Any]) -> Tuple[Optional[int], Optional[Dict[str, Any]], Optional[str]]:
+def request_json(
+    base_url: str,
+    params: Dict[str, Any],
+) -> Tuple[Optional[int], Optional[Dict[str, Any]], Optional[str]]:
     url = build_url(base_url, params)
     request = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})
     try:
@@ -185,7 +188,9 @@ def standardize_address(address: str, api_key: str) -> Dict[str, Any]:
         "response_status": response_status,
         "queryQuality": query_quality,
         "success": error is None,
-        "standardized_address": result.get("formatted_address") if isinstance(result, dict) else None,
+        "standardized_address": (
+            result.get("formatted_address") if isinstance(result, dict) else None
+        ),
         "lat": lat,
         "lng": lng,
         "city": result.get("city") if isinstance(result, dict) else None,
@@ -211,8 +216,14 @@ def print_result(index: int, result: Dict[str, Any]) -> None:
     print(f"   City: {result.get('city') or '-'}")
     print(f"   Town: {result.get('town') or '-'}")
     print(f"   Level: {result.get('level') or '-'}")
-    print(f"   Likelihood: {result.get('likelihood') if result.get('likelihood') is not None else '-'}")
-    print(f"   Authoritative: {result.get('authoritative') if result.get('authoritative') is not None else '-'}")
+    print(
+        f"   Likelihood: "
+        f"{result.get('likelihood') if result.get('likelihood') is not None else '-'}"
+    )
+    print(
+        f"   Authoritative: "
+        f"{result.get('authoritative') if result.get('authoritative') is not None else '-'}"
+    )
     print(f"   Error: {result.get('error') or '-'}")
 
 
@@ -257,8 +268,12 @@ def main() -> int:
         "summary": {
             "geocode_success": sum(1 for item in geocode_results if item["success"]),
             "geocode_failed": sum(1 for item in geocode_results if not item["success"]),
-            "standardization_success": sum(1 for item in standardization_results if item["success"]),
-            "standardization_failed": sum(1 for item in standardization_results if not item["success"]),
+            "standardization_success": sum(
+                1 for item in standardization_results if item["success"]
+            ),
+            "standardization_failed": sum(
+                1 for item in standardization_results if not item["success"]
+            ),
         },
     }
 

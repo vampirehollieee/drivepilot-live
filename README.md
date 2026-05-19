@@ -1,20 +1,35 @@
 # DrivePilot Live
 
-DrivePilot Live is a local-first market-signal observation system for LINE ride-driving work-group notifications. It turns noisy mobile notification streams into a structured command-center view for market rhythm, group activity, location distribution, system health, and report snapshots.
+DrivePilot Live is a local-first market-signal observation system for LINE
+ride-driving work-group notifications. It turns noisy mobile notification
+streams into a structured command-center view for market rhythm, group activity,
+location distribution, system health, and report snapshots.
 
-This project is a public, resume-friendly version of the original workspace. It demonstrates the product thinking, data pipeline, frontend interfaces, and local automation behind DrivePilot while excluding private runtime data and credentials.
+This project is a public, resume-friendly version of the original workspace. It
+demonstrates the product thinking, data pipeline, frontend interfaces, and local
+automation behind DrivePilot while excluding private runtime data and
+credentials.
 
-DrivePilot Live is not an auto-order tool. It does not operate LINE, accept jobs, make dispatch decisions, predict income, or automate user actions.
+DrivePilot Live is not an auto-order tool. It does not operate LINE, accept
+jobs, make dispatch decisions, predict income, or automate user actions.
 
 ## Overview
 
-DrivePilot Live was built to help a driver understand market activity from multiple LINE work groups without manually scanning every notification. The system receives forwarded Android notifications, parses market-relevant signals, organizes location and group activity data, and presents the results through desktop, mobile, live map, and Market Console views.
+DrivePilot Live was built to help a driver understand market activity from
+multiple LINE work groups without manually scanning every notification. The
+system receives forwarded Android notifications, parses market-relevant signals,
+organizes location and group activity data, and presents the results through
+desktop, mobile, live map, and Market Console views.
 
-The project focuses on local-first reliability: the operator can inspect each generated data artifact, run maintenance scripts manually, and verify the system state without relying on a hosted backend.
+The project focuses on local-first reliability: the operator can inspect each
+generated data artifact, run maintenance scripts manually, and verify the system
+state without relying on a hosted backend.
 
 ## Problem
 
-LINE ride-driving work groups can generate a high volume of fast-moving notifications. Useful market signals are mixed with repeated posts, unclear addresses, group chatter, and time-sensitive updates.
+LINE ride-driving work groups can generate a high volume of fast-moving
+notifications. Useful market signals are mixed with repeated posts, unclear
+addresses, group chatter, and time-sensitive updates.
 
 The core problems were:
 
@@ -69,13 +84,15 @@ Key architectural decisions:
 
 - Local-first data flow using generated JSON and CSV artifacts.
 - Explicit builder scripts instead of hidden background database mutations.
-- Separate outputs for unresolved candidates, reviewed coordinates, formal map markers, marker health, and market reports.
+- Separate outputs for unresolved candidates, reviewed coordinates, formal map
+  markers, marker health, and market reports.
 - Frontend pages read generated artifacts with cache busting.
 - Public copy excludes private runtime data and credentials.
 
 ## Technology Used
 
-- Python for parsing support scripts, statistics builders, coordinate queue generation, marker output, and market report generation.
+- Python for parsing support scripts, statistics builders, coordinate queue
+  generation, marker output, and market report generation.
 - PowerShell for the local receiver, local server workflow, status checks, and Windows automation.
 - BAT files for operator-friendly manual entrypoints.
 - HTML, CSS, and vanilla JavaScript for the dashboard and Market Console interfaces.
@@ -157,4 +174,6 @@ I designed and implemented the DrivePilot Live workflow end to end:
 ## Project Documentation
 
 - [Project Case Study](docs/project-docs/drivepilot-project-case-study.pdf)  
-  A public resume-oriented project summary covering product context, system architecture, implementation highlights, privacy handling, AI-assisted development workflow, and roadmap.
+  A public resume-oriented project summary covering product context, system
+  architecture, implementation highlights, privacy handling, AI-assisted
+  development workflow, and roadmap.
