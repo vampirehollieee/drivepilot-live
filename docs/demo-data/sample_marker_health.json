@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-05-19 10:30:00",
+  "source_file": "live-data/map_resolved_points.csv",
+  "source_file_mtime": "2026-05-19 10:29:00",
+  "input_rows": 32,
+  "output_markers": 18,
+  "skipped_invalid_coordinates": 0,
+  "skipped_missing_address": 0,
+  "duplicate_merged": 14,
+  "backup_created": "map_points.backup_demo.csv"
+}

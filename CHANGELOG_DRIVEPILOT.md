@@ -1,4 +1,4 @@
-# DrivePilot Live v1｜Changelog
+﻿# DrivePilot Live v1｜Changelog
 
 This file records Codex changes and verification results.
 
@@ -444,11 +444,11 @@ Verified the existing live-system/build_missing_coordinate_queue.py and Build Mi
 
 ### Test Method
 
-Ran python -B -m py_compile live-system/build_missing_coordinate_queue.py, ran python live-system/build_missing_coordinate_queue.py, ran Build Missing Coordinate Queue.bat through cmd input, inspected the first 10 queue rows, and checked 九如二路138號 and 大同一路188號 behavior.
+Ran python -B -m py_compile live-system/build_missing_coordinate_queue.py, ran python live-system/build_missing_coordinate_queue.py, ran Build Missing Coordinate Queue.bat through cmd input, inspected the first 10 queue rows, and checked Demo Address A and Demo Address B behavior.
 
 ### Test Result
 
-Pass. Previous queue count before the direct script run was 8817. Direct script run produced 8841 rows and created missing_coordinate_queue.backup_20260501_095625.csv. Bat run then backed up the 8841-row queue to missing_coordinate_queue.backup_20260501_095636.csv and regenerated 8841 rows. Current run stats: unresolved source count 6685, places source count 21441, notifications source count 46369, candidate before dedupe count 54682, dedupe removed count 45841, already resolved skipped count 1126, already cached skipped count 1, invalid skipped count 5268, final queue count 8841. source_file breakdown: unresolved_addresses.csv=823, notifications.jsonl=5674, places.csv=2344. 九如二路138號 is in the queue. Exact 大同一路188號 is excluded because it already exists in map_resolved_points.csv.
+Pass. Previous queue count before the direct script run was 8817. Direct script run produced 8841 rows and created missing_coordinate_queue.backup_20260501_095625.csv. Bat run then backed up the 8841-row queue to missing_coordinate_queue.backup_20260501_095636.csv and regenerated 8841 rows. Current run stats: unresolved source count 6685, places source count 21441, notifications source count 46369, candidate before dedupe count 54682, dedupe removed count 45841, already resolved skipped count 1126, already cached skipped count 1, invalid skipped count 5268, final queue count 8841. source_file breakdown: unresolved_addresses.csv=823, notifications.jsonl=5674, places.csv=2344. Demo Address A is in the queue. Exact Demo Address B is excluded because it already exists in map_resolved_points.csv.
 
 ### Risk / Follow-up
 
@@ -508,11 +508,11 @@ Added a standard-library queue builder that reads unresolved_addresses.csv, plac
 
 ### Test Method
 
-Ran python -B -m py_compile live-system/build_missing_coordinate_queue.py, ran python live-system/build_missing_coordinate_queue.py, ran Build Missing Coordinate Queue.bat through cmd input, inspected missing_coordinate_queue.csv, checked first 10 queue examples, and checked 九如二路138號 / 大同一路188號 / 高雄市新興區大同一路188號 behavior.
+Ran python -B -m py_compile live-system/build_missing_coordinate_queue.py, ran python live-system/build_missing_coordinate_queue.py, ran Build Missing Coordinate Queue.bat through cmd input, inspected missing_coordinate_queue.csv, checked first 10 queue examples, and checked Demo Address A / Demo Address B / Demo Address C behavior.
 
 ### Test Result
 
-Pass. unresolved source count 6668, places source count 21384, notifications source count 46224. candidate before dedupe count 54521, dedupe removed count 45704, already resolved skipped count 1124, already cached skipped count 1, invalid skipped count 5261, final queue count 8817. source_file breakdown: unresolved_addresses.csv=824, notifications.jsonl=5659, places.csv=2334. reason breakdown: queryable_address_missing_coordinates;not_in_resolved_or_cache=8817. 九如二路138號 is in the queue. Exact 大同一路188號 and 高雄市新興區大同一路188號 are excluded because they already exist in map_resolved_points.csv.
+Pass. unresolved source count 6668, places source count 21384, notifications source count 46224. candidate before dedupe count 54521, dedupe removed count 45704, already resolved skipped count 1124, already cached skipped count 1, invalid skipped count 5261, final queue count 8817. source_file breakdown: unresolved_addresses.csv=824, notifications.jsonl=5659, places.csv=2334. reason breakdown: queryable_address_missing_coordinates;not_in_resolved_or_cache=8817. Demo Address A is in the queue. Exact Demo Address B and Demo Address C are excluded because they already exist in map_resolved_points.csv.
 
 ### Risk / Follow-up
 
@@ -567,7 +567,7 @@ Audit dashboard parsed-address status classification and compare frontend status
 
 ### Summary
 
-Added a read-only audit script for parsed address classification. The script reads places.csv, map_resolved_points.csv, unresolved_addresses.csv, and address_geocode_cache.csv; analyzes the latest 60 minutes of parsed addresses; classifies each row as resolved, queryable_unresolved, road_level_only, landmark_or_text, or unknown; and writes both a review CSV and summary JSON. It also explicitly audits 九如二路138號, 大同一路188號, and 高雄市新興區大同一路188號. Dashboard status text was confirmed to come from live-map/dashboard.html mapping places.csv confidence values: high to 可定位, medium to 部分定位, and low to 待確認.
+Added a read-only audit script for parsed address classification. The script reads places.csv, map_resolved_points.csv, unresolved_addresses.csv, and address_geocode_cache.csv; analyzes the latest 60 minutes of parsed addresses; classifies each row as resolved, queryable_unresolved, road_level_only, landmark_or_text, or unknown; and writes both a review CSV and summary JSON. It also explicitly audits Demo Address A, Demo Address B, and Demo Address C. Dashboard status text was confirmed to come from live-map/dashboard.html mapping places.csv confidence values: high to 可定位, medium to 部分定位, and low to 待確認.
 
 ### Test Method
 
@@ -575,7 +575,7 @@ Ran python -B -m py_compile live-system/audit_parsed_address_classification.py, 
 
 ### Test Result
 
-Pass. Current audit window: 2026-05-01 03:11:17 to 2026-05-01 04:11:17. Recent 60-minute parsed address rows: 370. Inferred status counts: resolved=16, queryable_unresolved=290, road_level_only=61, landmark_or_text=3. Frontend status counts: 可定位=213, 部分定位=42, 待確認=115. 九如二路138號 is frontend 待確認 because places.csv confidence is low; it is queryable_unresolved, not in map_resolved_points.csv, present in unresolved_addresses.csv, and absent from address_geocode_cache.csv. 大同一路188號 latest exact row is frontend 待確認 but has historical/resolved marker rows. 高雄市新興區大同一路188號 is frontend 可定位 because places.csv confidence is high and is also present in map_resolved_points.csv.
+Pass. Current audit window: 2026-05-01 03:11:17 to 2026-05-01 04:11:17. Recent 60-minute parsed address rows: 370. Inferred status counts: resolved=16, queryable_unresolved=290, road_level_only=61, landmark_or_text=3. Frontend status counts: 可定位=213, 部分定位=42, 待確認=115. Demo Address A is frontend 待確認 because places.csv confidence is low; it is queryable_unresolved, not in map_resolved_points.csv, present in unresolved_addresses.csv, and absent from address_geocode_cache.csv. Demo Address B latest exact row is frontend 待確認 but has historical/resolved marker rows. Demo Address C is frontend 可定位 because places.csv confidence is high and is also present in map_resolved_points.csv.
 
 ### Risk / Follow-up
 
@@ -822,7 +822,7 @@ Searched project references for map_resolved_points.csv, inspected location_reso
 
 ### Test Result
 
-Pass. Before rebuild: 286 rows. After rebuild: 1169 rows. Rebuilt rows by source: 1010 from map_points, 159 from address_geocode_cache. MAP8 review rows in cache: 10. MAP8 review rows resolved into map_resolved_points.csv: 9. Unresolved MAP8 review row: 高雄市仁武區水管路二段35巷13-1號, because notifications.jsonl had no matching address or text.
+Pass. Before rebuild: 286 rows. After rebuild: 1169 rows. Rebuilt rows by source: 1010 from map_points, 159 from address_geocode_cache. MAP8 review rows in cache: 10. MAP8 review rows resolved into map_resolved_points.csv: 9. Unresolved MAP8 review row: Demo Address D, because notifications.jsonl had no matching address or text.
 
 ### Risk / Follow-up
 
@@ -1105,3 +1105,4 @@ Pass / Fail / Partial.
 Anything that may need attention later.
 
 ---
+

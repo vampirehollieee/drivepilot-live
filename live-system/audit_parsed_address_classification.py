@@ -22,9 +22,9 @@ REVIEW_PATH = DATA_DIR / "parsed_address_classification_review.csv"
 SUMMARY_PATH = DATA_DIR / "parsed_address_classification_audit.json"
 
 SPECIAL_CASES = [
-    "九如二路138號",
-    "大同一路188號",
-    "高雄市新興區大同一路188號",
+    "Demo City North Zone 100",
+    "Demo City Central Road 200",
+    "Demo City South District 300",
 ]
 
 FRONTEND_STATUS = {

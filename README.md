@@ -82,6 +82,8 @@ Key architectural decisions:
 - Leaflet for map visualization.
 - JSON, JSONL, and CSV artifacts for a transparent local data layer.
 - Git for the sanitized public portfolio version.
+- `live-system/README.md` explains the runtime scripts.
+- `docs/demo-data/` contains sanitized sample outputs.
 
 ## What This Project Demonstrates
 

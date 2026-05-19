@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-05-19 10:30:00",
+  "report_version": "public-demo",
+  "status": {
+    "market_data": "ok",
+    "marker_data": "ok",
+    "queue_data": "ok",
+    "overall": "ok"
+  },
+  "market_60m": {
+    "signal_count": 42,
+    "located_count": 15,
+    "hot_event_count": 3,
+    "personal_alert_count": 2,
+    "last_signal_time": "2026-05-19 10:28:00"
+  },
+  "market_24h": {
+    "generated_at": "2026-05-19 10:30:00",
+    "source_file_mtime": "2026-05-19 10:29:00",
+    "raw_count": 128,
+    "deduped_count": 94,
+    "duplicate_count": 34,
+    "duplicate_ratio": 0.2656
+  },
+  "markers": {
+    "generated_at": "2026-05-19 10:30:00",
+    "source_file_mtime": "2026-05-19 10:29:00",
+    "output_markers": 18,
+    "input_rows": 32,
+    "duplicate_merged": 14,
+    "skipped_invalid_coordinates": 0,
+    "skipped_missing_address": 0
+  },
+  "missing_coordinate_queue": {
+    "total_candidates": 320,
+    "good_count": 210,
+    "suspicious_count": 30,
+    "rejected_count": 80,
+    "final_queue_count": 240,
+    "dedupe_merged_count": 40
+  },
+  "hot_zones": [
+    { "name": "North Zone", "count": 24, "last_seen": "2026-05-19 10:28:00" },
+    { "name": "Central Zone", "count": 18, "last_seen": "2026-05-19 10:16:00" },
+    { "name": "South Zone", "count": 12, "last_seen": "2026-05-19 09:57:00" }
+  ],
+  "active_groups": [
+    { "name": "Group A", "count": 31, "last_seen": "2026-05-19 10:28:00" },
+    { "name": "Group B", "count": 22, "last_seen": "2026-05-19 10:16:00" },
+    { "name": "Group C", "count": 11, "last_seen": "2026-05-19 09:57:00" }
+  ],
+  "high_value_signals": [
+    {
+      "time": "2026-05-19 10:28:00",
+      "area_or_address": "Zone A",
+      "source": "Group A",
+      "label": "Address Signal",
+      "summary": "Demo market signal summary"
+    },
+    {
+      "time": "2026-05-19 10:16:00",
+      "area_or_address": "Zone B",
+      "source": "Group B",
+      "label": "Watch",
+      "summary": "Sample notification summary"
+    }
+  ],
+  "summary": {
+    "market_signal_level": "normal",
+    "data_health_note": "Demo data sources are available.",
+    "operator_note": "Demo market signals are available for observation.",
+    "last_signal_time": "2026-05-19 10:28:00",
+    "report_note": "Synthetic sample output for public portfolio review."
+  }
+}

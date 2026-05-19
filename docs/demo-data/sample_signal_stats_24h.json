@@ -1,0 +1,24 @@
+{
+  "generated_at": "2026-05-19 10:30:00",
+  "source_file_mtime": "2026-05-19 10:29:00",
+  "raw_count": 128,
+  "deduped_count": 94,
+  "duplicate_count": 34,
+  "current_24h": {
+    "raw_count": 128,
+    "deduped_count": 94,
+    "duplicate_count": 34,
+    "locatable_count": 36,
+    "unique_group_count": 3
+  },
+  "top_zones": [
+    { "name": "North Zone", "count": 24, "last_seen": "2026-05-19 10:28:00" },
+    { "name": "Central Zone", "count": 18, "last_seen": "2026-05-19 10:16:00" },
+    { "name": "South Zone", "count": 12, "last_seen": "2026-05-19 09:57:00" }
+  ],
+  "active_groups": [
+    { "name": "Group A", "count": 31, "last_seen": "2026-05-19 10:28:00" },
+    { "name": "Group B", "count": 22, "last_seen": "2026-05-19 10:16:00" },
+    { "name": "Group C", "count": 11, "last_seen": "2026-05-19 09:57:00" }
+  ]
+}

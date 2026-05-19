@@ -1,115 +1,19 @@
 [
   {
-    "aliases": ["小港機場", "高雄機場", "高雄國際機場", "高雄國際航空站"],
-    "address": "高雄市小港區中山四路2號",
+    "aliases": ["Demo Station", "North Hub"],
+    "address": "Demo City North Zone",
     "kind": "place_alias",
     "confidence": "high"
   },
   {
-    "aliases": ["左營高鐵", "高鐵左營站", "新左營站"],
-    "address": "高雄市左營區高鐵路105號",
+    "aliases": ["Central Demo Point", "Central Hub"],
+    "address": "Demo City Central Road",
     "kind": "place_alias",
     "confidence": "high"
   },
   {
-    "aliases": ["高雄車站", "高雄火車站"],
-    "address": "高雄市三民區建國二路318號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["鳳山火車站"],
-    "address": "高雄市鳳山區曹公路137號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["巨蛋", "漢神巨蛋"],
-    "address": "高雄市左營區博愛二路777號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["夢時代"],
-    "address": "高雄市前鎮區中華五路789號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["義享天地"],
-    "address": "高雄市鼓山區大順一路115號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["大遠百", "高雄大遠百"],
-    "address": "高雄市苓雅區三多四路21號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["高雄榮總", "榮總"],
-    "address": "高雄市左營區大中一路386號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["高醫", "高雄醫學大學附設醫院"],
-    "address": "高雄市三民區自由一路100號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["瑞豐夜市"],
-    "address": "高雄市左營區裕誠路南屏路口",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["六合夜市", "六合夜市入口"],
-    "address": "高雄市新興區六合二路",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["駁二", "駁二特區"],
-    "address": "高雄市鹽埕區大勇路1號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["西子灣"],
-    "address": "高雄市鼓山區蓮海路70號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["愛河"],
-    "address": "高雄市前金區河東路",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["衛武營", "衛武營國家藝術文化中心"],
-    "address": "高雄市鳳山區三多一路1號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["美麗島站"],
-    "address": "高雄市新興區中山一路115號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["中央公園站"],
-    "address": "高雄市前金區中山一路11號",
-    "kind": "place_alias",
-    "confidence": "high"
-  },
-  {
-    "aliases": ["三多商圈站"],
-    "address": "高雄市前鎮區中山二路268號",
+    "aliases": ["South Demo Point", "South Hub"],
+    "address": "Demo City South District",
     "kind": "place_alias",
     "confidence": "high"
   }

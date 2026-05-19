@@ -22,11 +22,11 @@ MAP8_STANDARDIZATION_URL = "https://api.map8.zone/v2/address/standardization"
 REQUEST_TIMEOUT_SECONDS = 15
 
 TEST_ADDRESSES = [
-    "高雄市鼓山區大順一路858號",
-    "高雄市左營區博愛二路",
-    "高雄市三民區建國三路",
-    "高雄市苓雅區中正一路",
-    "高雄市前鎮區中山二路",
+    "Demo City North Zone 100",
+    "Demo City Central Road 200",
+    "Demo City South District 300",
+    "Demo City East Avenue 400",
+    "Demo City West Street 500",
 ]
 
 
