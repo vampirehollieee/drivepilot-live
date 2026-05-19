@@ -22,11 +22,11 @@ MAP8_STANDARDIZATION_URL = "https://api.map8.zone/v2/address/standardization"
 REQUEST_TIMEOUT_SECONDS = 15
 
 TEST_ADDRESSES = [
-    "Demo City North Zone 100",
-    "Demo City Central Road 200",
-    "Demo City South District 300",
-    "Demo City East Avenue 400",
-    "Demo City West Street 500",
+    "Demo City North Zone",
+    "Demo City Central Road",
+    "Demo City South District",
+    "Demo City East Avenue",
+    "Demo City West Station",
 ]
 
 
