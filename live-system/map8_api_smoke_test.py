@@ -64,9 +64,16 @@ def request_json(
     params: Dict[str, Any],
 ) -> Tuple[Optional[int], Optional[Dict[str, Any]], Optional[str]]:
     url = build_url(base_url, params)
-    request = urllib.request.Request(url, method="GET", headers={"Accept": "application/json"})
+    request = urllib.request.Request(
+        url,
+        method="GET",
+        headers={"Accept": "application/json"},
+    )
     try:
-        with urllib.request.urlopen(request, timeout=REQUEST_TIMEOUT_SECONDS) as response:
+        with urllib.request.urlopen(
+            request,
+            timeout=REQUEST_TIMEOUT_SECONDS,
+        ) as response:
             body = response.read().decode("utf-8", errors="replace")
             try:
                 return response.status, json.loads(body), None
@@ -148,7 +155,9 @@ def geocode_address(address: str, api_key: str) -> Dict[str, Any]:
         "http_status": status_code,
         "response_status": response_status,
         "success": error is None,
-        "formatted_address": result.get("formatted_address") if isinstance(result, dict) else None,
+        "formatted_address": (
+            result.get("formatted_address") if isinstance(result, dict) else None
+        ),
         "lat": lat,
         "lng": lng,
         "city": result.get("city") if isinstance(result, dict) else None,
@@ -156,7 +165,9 @@ def geocode_address(address: str, api_key: str) -> Dict[str, Any]:
         "type": result.get("type") if isinstance(result, dict) else None,
         "level": result.get("level") if isinstance(result, dict) else None,
         "likelihood": result.get("likelihood") if isinstance(result, dict) else None,
-        "authoritative": result.get("authoritative") if isinstance(result, dict) else None,
+        "authoritative": (
+            result.get("authoritative") if isinstance(result, dict) else None
+        ),
         "error": error,
         "raw_response": raw_response(payload),
     }
@@ -204,10 +215,30 @@ def standardize_address(address: str, api_key: str) -> Dict[str, Any]:
 
 
 def print_result(index: int, result: Dict[str, Any]) -> None:
-    display_address = result.get("formatted_address") or result.get("standardized_address") or "-"
+    display_address = (
+        result.get("formatted_address")
+        or result.get("standardized_address")
+        or "-"
+    )
+    likelihood = (
+        result.get("likelihood")
+        if result.get("likelihood") is not None
+        else "-"
+    )
+    authoritative = (
+        result.get("authoritative")
+        if result.get("authoritative") is not None
+        else "-"
+    )
+    http_status = (
+        result.get("http_status")
+        if result.get("http_status") is not None
+        else "-"
+    )
+
     print(f"{index}. {result['request_address']}")
     print(f"   API type: {result['api_type']}")
-    print(f"   HTTP: {result.get('http_status') if result.get('http_status') is not None else '-'}")
+    print(f"   HTTP: {http_status}")
     print(f"   Response status: {result.get('response_status') or '-'}")
     print(f"   Success: {str(bool(result.get('success'))).lower()}")
     print(f"   Address: {display_address}")
@@ -218,11 +249,11 @@ def print_result(index: int, result: Dict[str, Any]) -> None:
     print(f"   Level: {result.get('level') or '-'}")
     print(
         f"   Likelihood: "
-        f"{result.get('likelihood') if result.get('likelihood') is not None else '-'}"
+        f"{likelihood}"
     )
     print(
         f"   Authoritative: "
-        f"{result.get('authoritative') if result.get('authoritative') is not None else '-'}"
+        f"{authoritative}"
     )
     print(f"   Error: {result.get('error') or '-'}")
 
@@ -279,7 +310,10 @@ def main() -> int:
 
     try:
         LIVE_DATA_DIR.mkdir(parents=True, exist_ok=True)
-        OUTPUT_PATH.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
+        OUTPUT_PATH.write_text(
+            json.dumps(output, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
         print("")
         print("Output:")
         print(str(OUTPUT_PATH.relative_to(PROJECT_ROOT)))

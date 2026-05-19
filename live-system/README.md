@@ -5,7 +5,8 @@ DrivePilot Live. The public repository keeps the source code for portfolio
 review, but excludes private runtime data, API keys, webhooks, logs, and
 generated `live-data/` files.
 
-DrivePilot is an observation system. These scripts do not auto-accept jobs, operate LINE, or make dispatch decisions.
+DrivePilot is an observation system. These scripts do not auto-accept jobs,
+operate LINE, or make dispatch decisions.
 
 ## Main Scripts
 
@@ -41,7 +42,8 @@ notification records.
 
 ### `health_check.ps1`
 
-Runs local service health checks for DrivePilot runtime components such as receiver and map server availability.
+Runs local service health checks for DrivePilot runtime components such as
+receiver and map server availability.
 
 ### `discord_notifier.ps1`
 
@@ -80,6 +82,7 @@ private runtime workspace.
 ## Public Repository Notes
 
 - No real runtime `live-data/` files are included.
-- No API keys, private configuration, webhooks, raw LINE messages, or address caches are included.
+- No API keys, private configuration, webhooks, raw LINE messages, or address
+  caches are included.
 - Scripts are kept to demonstrate architecture and implementation approach, not
   to run as a production deployment from this public copy.
