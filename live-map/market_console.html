@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#15171a">
+  <title>DrivePilot Market Console</title>
+  <style>
+    :root {
+      --bg: #15171a;
+      --panel: #202328;
+      --panel-soft: #252932;
+      --line: rgba(255,255,255,.08);
+      --text: #f0f2f5;
+      --muted: #aab0ba;
+      --muted-2: #7f8792;
+      --green: #3fb378;
+      --orange: #d38b2f;
+      --red: #d45757;
+      --gray: #8d929c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #191c20 0, var(--bg) 56%, #121417 100%);
+      color: var(--text);
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      letter-spacing: 0;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      padding: 14px 14px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(21,23,26,.92);
+      backdrop-filter: blur(10px);
+    }
+    .topbar-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .topbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 7px;
+      min-width: 132px;
+    }
+    .action-btn {
+      min-height: 34px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: rgba(255,255,255,.05);
+      color: var(--text);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .action-btn:hover { background: rgba(255,255,255,.08); }
+    .action-btn:disabled {
+      cursor: wait;
+      color: var(--muted-2);
+      opacity: .72;
+    }
+    .refresh-status {
+      flex-basis: 100%;
+      color: var(--muted-2);
+      font-size: 11px;
+      line-height: 1.35;
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+    .subline {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    main {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: 12px;
+    }
+    .card {
+      margin-bottom: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--gray);
+      border-radius: 14px;
+      background: linear-gradient(180deg, rgba(37,41,50,.96), rgba(32,35,40,.96));
+      box-shadow: 0 14px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    .card.ok { border-left-color: var(--green); }
+    .card.attention { border-left-color: var(--orange); }
+    .card.error { border-left-color: var(--red); }
+    .card h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      color: #f7f8fa;
+    }
+    .status-pill {
+      display: inline-block;
+      padding: 5px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.04);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .status-pill.ok { color: #94e2b6; border-color: rgba(63,179,120,.36); background: rgba(63,179,120,.12); }
+    .status-pill.attention { color: #f0bd76; border-color: rgba(211,139,47,.38); background: rgba(211,139,47,.12); }
+    .status-pill.error { color: #ff9b9b; border-color: rgba(212,87,87,.42); background: rgba(212,87,87,.12); }
+    .hero {
+      display: grid;
+      gap: 12px;
+    }
+    .hero-state {
+      color: #fff;
+      font-size: clamp(32px, 9vw, 56px);
+      font-weight: 900;
+      line-height: 1;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .status-facts {
+      display: grid;
+      gap: 8px;
+    }
+    .fact {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .fact:last-child { border-bottom: 0; }
+    .fact span {
+      color: var(--muted-2);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .fact strong {
+      color: #fff;
+      font-size: 13px;
+      text-align: right;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+    .metric {
+      min-width: 0;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.035);
+    }
+    .metric strong {
+      display: block;
+      color: #fff;
+      font-size: 22px;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .metric span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted-2);
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .metric-note {
+      margin-top: 6px;
+      color: var(--muted-2);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+    .list {
+      display: grid;
+      gap: 8px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.03);
+    }
+    .row-title {
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .row-sub {
+      margin-top: 4px;
+      color: var(--muted-2);
+      font-size: 12px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .row-count {
+      min-width: 44px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1;
+      text-align: right;
+    }
+    .signal-row {
+      grid-template-columns: 1fr;
+    }
+    .signal-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 7px;
+    }
+    .tag {
+      padding: 3px 7px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,.03);
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .empty-state {
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      color: var(--muted-2);
+      background: rgba(255,255,255,.02);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .time-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+    .time-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .time-row:last-child { border-bottom: 0; }
+    .label {
+      color: var(--muted-2);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .value {
+      color: #f2f4f7;
+      font-size: 13px;
+      text-align: right;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .error-message {
+      padding: 20px 14px;
+      color: #ffd2d2;
+      border: 1px solid rgba(212,87,87,.35);
+      border-radius: 14px;
+      background: rgba(212,87,87,.1);
+      line-height: 1.6;
+    }
+    @media (min-width: 760px) {
+      main { padding: 18px; }
+      .hero { grid-template-columns: 1.15fr .85fr; align-items: start; }
+      .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .time-grid { grid-template-columns: repeat(3, 1fr); }
+      .time-row { display: block; border-bottom: 0; padding: 0; }
+      .value { display: block; margin-top: 6px; text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-main">
+      <div>
+        <h1>DrivePilot Market Console</h1>
+        <div id="topGeneratedAt" class="subline">generated_at：—</div>
+        <div id="topLastSignalTime" class="subline">最後訊號時間：—</div>
+      </div>
+      <div class="topbar-actions">
+        <button id="refreshReportBtn" class="action-btn" type="button">更新報告</button>
+        <button id="reloadReportBtn" class="action-btn" type="button">重新整理</button>
+        <span id="overallPill" class="status-pill">overall：—</span>
+        <div id="refreshStatus" class="refresh-status">—</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section id="marketStatusCard" class="card">
+      <h2>目前市場判讀</h2>
+      <div id="marketStatusContent" class="hero">
+        <div>
+          <div class="hero-state">—</div>
+          <div class="note">暫無市場報告</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>60 分鐘市場摘要</h2>
+      <div class="grid">
+        <div class="metric"><strong id="coreSignals">—</strong><span>60 分鐘訊號</span></div>
+        <div class="metric"><strong id="coreLocated">—</strong><span>解析地址</span></div>
+        <div class="metric"><strong id="coreHotEvents">—</strong><span>熱門事件</span></div>
+        <div class="metric"><strong id="corePersonalAlerts">—</strong><span>個人提醒</span></div>
+        <div class="metric"><strong id="lastSignalTime">—</strong><span>最後訊號時間</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>熱區 Top 5</h2>
+      <div id="hotZonesList" class="list">
+        <div class="empty-state">暫無熱區資料</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>群組活躍 Top 5</h2>
+      <div id="activeGroupsList" class="list">
+        <div class="empty-state">暫無群組活躍資料</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>最近高價值訊號</h2>
+      <div id="highValueSignalsList" class="list">
+        <div class="empty-state">暫無高價值訊號</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Data Quality</h2>
+      <div class="grid">
+        <div class="metric"><strong id="rawCount">—</strong><span>原始訊號</span></div>
+        <div class="metric"><strong id="dedupedCount">—</strong><span>去重後訊號</span></div>
+        <div class="metric"><strong id="duplicateCount">—</strong><span>重複訊號</span></div>
+        <div class="metric"><strong id="duplicateRatio">—</strong><span>重複比例</span></div>
+        <div class="metric"><strong id="outputMarkers">—</strong><span>地圖標記</span></div>
+        <div class="metric">
+          <strong id="finalQueueCount">—</strong>
+          <span>待補座標</span>
+          <div class="metric-note">長期累積，不影響目前市場報告</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>更新時間</h2>
+      <div class="time-grid">
+        <div class="time-row"><div class="label">generated_at</div><div id="reportGeneratedAt" class="value">—</div></div>
+        <div class="time-row"><div class="label">24HR 最後更新</div><div id="marketGeneratedAt" class="value">—</div></div>
+        <div class="time-row"><div class="label">Marker 最後更新</div><div id="markerGeneratedAt" class="value">—</div></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const paths = [
+      () => `data/market_report.json?t=${Date.now()}`,
+      () => `../live-data/market_report.json?t=${Date.now()}`
+    ];
+    let isRefreshingReport = false;
+
+    function byId(id) {
+      return document.getElementById(id);
+    }
+
+    function readPath(source, path) {
+      return path.split(".").reduce((value, key) => {
+        if (value === null || value === undefined) return undefined;
+        return value[key];
+      }, source);
+    }
+
+    function firstDefined(...values) {
+      return values.find((value) => value !== null && value !== undefined && value !== "");
+    }
+
+    function firstArray(source, pathsToTry) {
+      for (const path of pathsToTry) {
+        const value = readPath(source, path);
+        if (Array.isArray(value) && value.length > 0) return value;
+      }
+      return [];
+    }
+
+    function escapeHtml(value) {
+      return text(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function text(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function count(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      const number = Number(value);
+      return Number.isFinite(number) ? String(number) : "—";
+    }
+
+    function ratio(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      const number = Number(value);
+      return Number.isFinite(number) ? `${(number * 100).toFixed(1)}%` : "—";
+    }
+
+    function levelLabel(value) {
+      return {
+        cold: "偏冷",
+        normal: "正常",
+        active: "活躍",
+        noisy: "重複偏高",
+        unknown: "未知"
+      }[value] || "未知";
+    }
+
+    function tone(value) {
+      const normalized = String(value || "").toLowerCase();
+      if (["ok", "normal"].includes(normalized)) return "ok";
+      if (["attention", "noisy", "stale", "active"].includes(normalized)) return "attention";
+      if (["missing", "error", "abnormal"].includes(normalized)) return "error";
+      return "";
+    }
+
+    function setContent(id, value) {
+      const target = byId(id);
+      if (target) target.textContent = text(value);
+    }
+
+    function setRefreshStatus(message, toneName = "") {
+      const target = byId("refreshStatus");
+      if (!target) return;
+      target.textContent = text(message);
+      target.style.color = toneName === "error" ? "var(--red)" : toneName === "ok" ? "var(--green)" : "var(--muted-2)";
+    }
+
+    function setRefreshBusy(isBusy) {
+      isRefreshingReport = isBusy;
+      const refreshButton = byId("refreshReportBtn");
+      const reloadButton = byId("reloadReportBtn");
+      if (refreshButton) refreshButton.disabled = isBusy;
+      if (reloadButton) reloadButton.disabled = isBusy;
+    }
+
+    function renderError(title, detail) {
+      byId("overallPill").className = "status-pill error";
+      byId("overallPill").textContent = "overall：error";
+      byId("marketStatusCard").className = "card error";
+      byId("marketStatusContent").innerHTML = `<div class="error-message"><strong>${escapeHtml(title)}</strong><br>${escapeHtml(detail)}</div>`;
+      console.warn("DrivePilot Market Console:", title, detail);
+    }
+
+    async function loadReport() {
+      let lastError = "";
+      for (const pathFactory of paths) {
+        const url = pathFactory();
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (response.status === 404) {
+            lastError = "404";
+            continue;
+          }
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const raw = await response.text();
+          try {
+            return JSON.parse(raw);
+          } catch (error) {
+            renderError("市場報告格式錯誤", "market_report.json 不是有效 JSON。");
+            return null;
+          }
+        } catch (error) {
+          lastError = error && error.message ? error.message : String(error);
+          console.warn(`Market report fetch failed: ${url}`, lastError);
+        }
+      }
+      renderError("暫無市場報告", "無法讀取 live-data/market_report.json。");
+      return null;
+    }
+
+    function renderTopList(targetId, rows, emptyText, fields) {
+      const target = byId(targetId);
+      if (!target) return;
+      const topRows = rows.slice(0, 5);
+      if (!topRows.length) {
+        target.innerHTML = `<div class="empty-state">${escapeHtml(emptyText)}</div>`;
+        return;
+      }
+      target.innerHTML = topRows.map((row) => {
+        const title = firstDefined(...fields.title.map((key) => row[key]));
+        const rowCount = firstDefined(...fields.count.map((key) => row[key]));
+        const timeValue = firstDefined(...fields.time.map((key) => row[key]));
+        return `
+          <div class="row">
+            <div>
+              <div class="row-title">${escapeHtml(title)}</div>
+              <div class="row-sub">最後出現：${escapeHtml(timeValue)}</div>
+            </div>
+            <div class="row-count">${escapeHtml(count(rowCount))}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHighValueSignals(rows) {
+      const target = byId("highValueSignalsList");
+      if (!target) return;
+      const topRows = rows.slice(0, 5);
+      if (!topRows.length) {
+        target.innerHTML = `<div class="empty-state">暫無高價值訊號</div>`;
+        return;
+      }
+      target.innerHTML = topRows.map((row) => {
+        const timeValue = firstDefined(row.time, row.timestamp, row.last_seen, row.created_at);
+        const place = firstDefined(row.address, row.area_or_address, row.zone, row.area, row.place, row.location, row.title);
+        const source = firstDefined(row.source, row.group, row.group_name, row.source_name);
+        const label = firstDefined(row.label, row.tag, row.type, row.kind);
+        const summary = firstDefined(row.text, row.summary, row.text_summary, row.message, row.note);
+        return `
+          <div class="row signal-row">
+            <div>
+              <div class="row-title">${escapeHtml(place)}</div>
+              <div class="row-sub">${escapeHtml(summary)}</div>
+              <div class="signal-tags">
+                <span class="tag">${escapeHtml(timeValue)}</span>
+                <span class="tag">${escapeHtml(source)}</span>
+                <span class="tag">${escapeHtml(label)}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderReport(report) {
+      if (!report) return;
+      const status = report.status || {};
+      const market24h = report.market_24h || {};
+      const market60m = report.market_60m || {};
+      const markers = report.markers || {};
+      const queue = report.missing_coordinate_queue || {};
+      const summary = report.summary || {};
+      const overall = status.overall || "unknown";
+      const marketLevel = summary.market_signal_level || "unknown";
+      const overallTone = tone(overall);
+      const statusCardTone = tone(marketLevel) || overallTone;
+
+      byId("topGeneratedAt").textContent = `generated_at：${text(report.generated_at)}`;
+      byId("topLastSignalTime").textContent = `最後訊號時間：${text(summary.last_signal_time)}`;
+      byId("overallPill").className = `status-pill ${overallTone}`;
+      byId("overallPill").textContent = `overall：${text(overall)}`;
+      byId("marketStatusCard").className = `card ${statusCardTone}`;
+      byId("marketStatusContent").innerHTML = `
+        <div>
+          <div class="hero-state">${escapeHtml(levelLabel(marketLevel))}</div>
+          <div class="note">${escapeHtml(summary.operator_note)}</div>
+          <div class="note">${escapeHtml(summary.data_health_note)}</div>
+          <div class="note">${escapeHtml(summary.report_note)}</div>
+        </div>
+        <div class="status-facts">
+          <div class="fact"><span>overall</span><strong>${escapeHtml(overall)}</strong></div>
+          <div class="fact"><span>market_signal_level</span><strong>${escapeHtml(marketLevel)}</strong></div>
+          <div class="fact"><span>最後訊號時間</span><strong>${escapeHtml(summary.last_signal_time)}</strong></div>
+        </div>
+      `;
+
+      setContent("coreSignals", count(market60m.signal_count));
+      setContent("coreLocated", count(market60m.located_count));
+      setContent("coreHotEvents", count(market60m.hot_event_count));
+      setContent("corePersonalAlerts", count(market60m.personal_alert_count));
+      setContent("lastSignalTime", market60m.last_signal_time);
+
+      renderTopList("hotZonesList", firstArray(report, [
+        "hot_zones",
+        "top_zones"
+      ]), "暫無熱區資料", {
+        title: ["zone", "name", "area", "district", "title"],
+        count: ["count", "signals", "total", "value"],
+        time: ["last_seen", "latest_time", "last_signal_time", "time"]
+      });
+
+      renderTopList("activeGroupsList", firstArray(report, [
+        "active_groups",
+        "top_groups",
+        "group_activity"
+      ]), "暫無群組活躍資料", {
+        title: ["group", "name", "group_name", "source", "title"],
+        count: ["count", "signals", "total", "value"],
+        time: ["last_seen", "latest_time", "last_signal_time", "time"]
+      });
+
+      renderHighValueSignals(firstArray(report, [
+        "high_value_signals",
+        "recent_high_value_signals",
+        "recent_signals"
+      ]));
+
+      setContent("rawCount", count(market24h.raw_count));
+      setContent("dedupedCount", count(market24h.deduped_count));
+      setContent("duplicateCount", count(market24h.duplicate_count));
+      setContent("duplicateRatio", ratio(market24h.duplicate_ratio));
+      setContent("outputMarkers", count(markers.output_markers));
+      setContent("finalQueueCount", count(queue.final_queue_count));
+      setContent("reportGeneratedAt", report.generated_at);
+      setContent("marketGeneratedAt", market24h.generated_at);
+      setContent("markerGeneratedAt", markers.generated_at);
+    }
+
+    async function reloadReport(showStatus = true) {
+      if (showStatus) setRefreshStatus("重新整理中…");
+      try {
+        const report = await loadReport();
+        if (report) {
+          renderReport(report);
+          if (showStatus) setRefreshStatus("已重新整理", "ok");
+        }
+      } catch (error) {
+        console.warn("DrivePilot Market Console reload failed:", error);
+        if (showStatus) setRefreshStatus("重新整理失敗", "error");
+      }
+    }
+
+    async function refreshMarketReport() {
+      if (isRefreshingReport) return;
+      setRefreshBusy(true);
+      setRefreshStatus("更新中…");
+      try {
+        const response = await fetch("api/refresh-market-report", {
+          method: "POST",
+          cache: "no-store"
+        });
+        let payload = {};
+        try {
+          payload = await response.json();
+        } catch (error) {
+          payload = { ok: false, message: "更新失敗", error: "invalid_json_response" };
+        }
+        if (!response.ok || !payload.ok) {
+          const message = payload.message || payload.error || `HTTP ${response.status}`;
+          setRefreshStatus(`更新失敗：${message}`, "error");
+          return;
+        }
+        await reloadReport(false);
+        setRefreshStatus(`更新完成：${text(payload.generated_at)}`, "ok");
+      } catch (error) {
+        console.warn("DrivePilot Market Console refresh failed:", error);
+        setRefreshStatus("更新失敗", "error");
+      } finally {
+        setRefreshBusy(false);
+      }
+    }
+
+    byId("refreshReportBtn").addEventListener("click", refreshMarketReport);
+    byId("reloadReportBtn").addEventListener("click", () => reloadReport(true));
+    reloadReport(false);
+  </script>
+</body>
+</html>

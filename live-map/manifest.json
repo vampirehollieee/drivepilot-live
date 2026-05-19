@@ -1,0 +1,22 @@
+{
+  "name": "DrivePilot 戰情室",
+  "short_name": "DrivePilot",
+  "display": "standalone",
+  "start_url": "/mobile_dashboard.html",
+  "theme_color": "#121820",
+  "background_color": "#121820",
+  "icons": [
+    {
+      "src": "/icons/drivepilot-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/drivepilot-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

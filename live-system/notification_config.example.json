@@ -1,0 +1,36 @@
+﻿{
+  "mode": "radar",
+  "ports": {
+    "notification_receiver": 8788,
+    "map_server": 8790
+  },
+  "paths": {
+    "data_dir": "../live-data",
+    "map_dir": "../live-map"
+  },
+  "enable_discord_push": false,
+  "discord_mention_user_id": "",
+  "line_filters": {
+    "allowed_packages": ["jp.naver.line.android"],
+    "allowed_groups": [],
+    "dispatcher_contacts": [],
+    "ignore_keywords": []
+  },
+  "discord_webhooks": {
+    "high_confidence_address": "",
+    "hot_zone_summary": "",
+    "system_status": "",
+    "test": "",
+    "dispatcher_alert": "",
+    "dashboard": ""
+  },
+  "discord_push_rules": {
+    "push_high_confidence_address": false,
+    "push_hot_zone_summary": false,
+    "push_system_status": false,
+    "dedupe_minutes": 10,
+    "hot_zone_summary_interval_minutes": 15,
+    "push_only_when_market_heat_changes": false,
+    "min_confidence_to_push": "high"
+  }
+}

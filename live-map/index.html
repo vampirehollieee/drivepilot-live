@@ -1,0 +1,1074 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DrivePilot 即時地圖</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <script>
+    if (new URLSearchParams(window.location.search).has("embed")) {
+      document.documentElement.classList.add("is-embed");
+    }
+  </script>
+  <style>
+    :root {
+      --bg: #202123;
+      --panel: rgba(42, 43, 47, .94);
+      --panel-soft: rgba(47, 48, 53, .92);
+      --line: rgba(255, 255, 255, .08);
+      --line-soft: rgba(255, 255, 255, .055);
+      --text: #f2f4f7;
+      --muted: #9aa3af;
+      --muted-2: #707985;
+      --blue: #4f8ecb;
+      --green: #3fb378;
+      --orange: #d38b2f;
+      --red: #d45757;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: "Microsoft JhengHei", Arial, sans-serif; background: #202123; color: var(--text); letter-spacing: 0; }
+    .app { display: grid; grid-template-columns: 380px 1fr; height: 100%; }
+    aside { overflow: auto; border-right: 1px solid var(--line); background: rgba(32,33,35,.96); box-shadow: 16px 0 40px rgba(0,0,0,.22); z-index: 500; }
+    header { padding: 18px; border-bottom: 1px solid var(--line); background: rgba(38,39,43,.98); }
+    h1 { margin: 0 0 6px; color: #fff; font-size: 20px; font-weight: 900; }
+    .hint { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .tools { padding: 13px 18px; border-bottom: 1px solid var(--line); background: rgba(42,43,47,.92); font-size: 13px; line-height: 1.8; }
+    .tools button { margin: 0 8px 8px 0; padding: 7px 9px; border: 1px solid rgba(160,180,210,.16); border-radius: 10px; background: rgba(255,255,255,.045); color: #d7e2ef; font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .tools button:hover { color: #fff; border-color: rgba(160,180,210,.28); background: rgba(255,255,255,.07); }
+    .item {
+      display: block;
+      width: calc(100% - 20px);
+      margin: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-left: 3px solid #565e69;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(48,49,54,.94), rgba(42,43,47,.9));
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+    .item:hover { border-color: #626b78; background: #181c22; }
+    .name { margin: 0 0 6px; color: #fff; font-weight: 900; font-size: 14px; line-height: 1.45; }
+    .meta { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .recent { padding: 15px 18px; border-top: 1px solid var(--line); color: #d6dae0; font-size: 12px; line-height: 1.7; }
+    .recent h2 { margin: 0 0 9px; color: #f7f8fa; font-size: 14px; font-weight: 900; border-left: 3px solid #737b86; padding-left: 8px; }
+    .recent div { padding: 7px 0; border-bottom: 1px solid var(--line-soft); color: #d6dae0; }
+    .statusline { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line-soft); color: var(--muted); }
+    .compare-card { padding: 15px 18px; border-bottom: 1px solid var(--line); background: rgba(32,33,35,.94); }
+    .compare-card h2 { margin: 0 0 10px; color: #f7f8fa; font-size: 14px; font-weight: 900; border-left: 3px solid #737b86; padding-left: 8px; }
+    .compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .compare-item { padding: 8px 9px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.035); min-width: 0; }
+    .compare-item strong { display: block; color: #fff; font-size: 16px; line-height: 1.25; }
+    .compare-item span { display: block; margin-top: 2px; color: var(--muted-2); font-size: 11px; font-weight: 800; }
+    .compare-delta { margin-top: 10px; padding-top: 9px; border-top: 1px solid var(--line-soft); color: #d6dae0; font-size: 12px; line-height: 1.7; }
+    .compare-meta { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .compare-error { color: #f0b766; font-size: 12px; line-height: 1.6; }
+    .map-stage { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+    .is-embed body,
+    .is-embed body .app,
+    .is-embed body .map-stage,
+    .is-embed body #map,
+    .is-embed body .leaflet-container {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+    }
+    .is-embed body .app { grid-template-columns: minmax(0, 1fr); }
+    .is-embed body aside { display: none; }
+    .is-embed body #map { min-height: 0; }
+    .refresh { width: 100%; margin-bottom: 12px; padding: 10px 12px; border: 1px solid rgba(160,180,210,.16); border-radius: 13px; background: rgba(255,255,255,.045); color: #e7ebf0; cursor: pointer; font-weight: 800; }
+    .refresh:hover { border-color: #626b78; background: #171a20; }
+    .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .actions a, .actions button { padding: 8px 10px; border: 1px solid rgba(160,180,210,.16); border-radius: 11px; background: rgba(255,255,255,.045); color: #e7ebf0; font: inherit; font-size: 12px; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .actions a:hover, .actions button:hover { border-color: #626b78; background: #171a20; }
+    .place-card { min-width: 250px; max-width: 350px; padding: 16px; color: #e4e8ed; line-height: 1.7; border: 1px solid rgba(160,180,210,.14); border-left: 3px solid #596675; background: linear-gradient(180deg, rgba(18,26,40,.96), rgba(8,12,20,.96)); border-radius: 16px; box-shadow: inset 0 1px 0 rgba(255,255,255,.045); }
+    .recent .place-card div { border-bottom: 0; padding: 0; }
+    .place-title { font-size: 16px; font-weight: 900; color: #fff; margin-bottom: 8px; line-height: 1.45; }
+    .place-row { margin: 5px 0; color: #d5dae0; }
+    .place-row span:first-child { color: var(--muted); font-size: 12px; margin-right: 5px; }
+    .muted { color: var(--muted-2); font-size: 12px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 900; line-height: 1.5; border: 1px solid transparent; }
+    .badge.high { background: rgba(63,179,120,.16); color: #78d8a5; border-color: rgba(63,179,120,.38); }
+    .badge.medium { background: rgba(211,139,47,.16); color: #f0b766; border-color: rgba(211,139,47,.38); }
+    .badge.low { background: rgba(154,163,175,.13); color: #c3c9d0; border-color: rgba(154,163,175,.28); }
+    .badge.kind { background: rgba(79,142,203,.13); color: #9cc4ee; border-color: rgba(79,142,203,.32); }
+    select { width: 100%; margin-bottom: 10px; padding: 8px 10px; border: 1px solid rgba(160,180,210,.16); border-radius: 12px; background: #0c0e11; color: var(--text); }
+    select option { background: #0c0e11; color: var(--text); }
+    #map { height: 100%; min-height: 720px; background: #242528; font-size: 15px; }
+    .leaflet-pane,
+    .leaflet-tile-pane,
+    .leaflet-tile { opacity: 1; }
+    .leaflet-tile-pane {
+      filter: invert(.88) hue-rotate(180deg) saturate(.48) brightness(.78) contrast(.94);
+    }
+    .leaflet-container { background: #242528; font-size: 15px; }
+    .leaflet-control-zoom a, .leaflet-control-attribution { background: rgba(13,15,18,.88) !important; color: #c7cdd5 !important; border-color: var(--line) !important; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: rgba(9,14,22,.98); color: var(--text); border: 1px solid rgba(160,180,210,.16); border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,.62), 0 0 22px rgba(79,142,203,.07), inset 0 1px 0 rgba(255,255,255,.04); }
+    .leaflet-popup-content { margin: 8px; }
+    .live-dot { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.86); border-radius: 99px; background: #9098a4; box-shadow: 0 0 0 4px rgba(255,255,255,.09), 0 8px 18px rgba(0,0,0,.45); }
+    .live-dot { border-color: var(--group-color, rgba(255,255,255,.86)); box-shadow: 0 0 0 4px rgba(255,255,255,.08), 0 8px 18px rgba(0,0,0,.45); }
+    .live-dot.high { background: #4fd18c; box-shadow: 0 0 0 4px rgba(63,179,120,.18), 0 0 18px rgba(63,179,120,.55), 0 8px 18px rgba(0,0,0,.45); }
+    .live-dot.high { border-color: var(--group-color, rgba(255,255,255,.86)); }
+    .live-dot.medium { background: #e2a345; box-shadow: 0 0 0 4px rgba(211,139,47,.16), 0 0 16px rgba(211,139,47,.48), 0 8px 18px rgba(0,0,0,.45); }
+    .live-dot.medium { border-color: var(--group-color, rgba(255,255,255,.86)); }
+    .live-dot.low { background: #9ca3af; }
+    .source-chip { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 3px 8px; border: 1px solid rgba(160,180,210,.14); border-radius: 999px; background: rgba(255,255,255,.045); color: #dbe2eb; font-size: 12px; font-weight: 800; }
+    .group-swatch { display: inline-block; width: 9px; height: 9px; flex: 0 0 auto; border-radius: 999px; background: var(--group-color, #94a3b8); box-shadow: 0 0 0 2px rgba(255,255,255,.08); }
+    .group-legend { padding: 13px 18px; border-bottom: 1px solid var(--line); background: rgba(32,33,35,.94); }
+    .group-legend h2 { margin: 0 0 9px; color: #f7f8fa; font-size: 13px; font-weight: 900; border-left: 3px solid #737b86; padding-left: 8px; }
+    .legend-row { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 5px 0; color: #d6dae0; font-size: 12px; }
+    .legend-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .legend-count { margin-left: auto; color: var(--muted-2); font-size: 11px; }
+    .fallback { position: absolute; z-index: 400; left: 14px; top: 14px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 14px; background: rgba(22,25,30,.82); color: #d6dae0; font-size: 12px; line-height: 1.55; box-shadow: 0 12px 28px rgba(0,0,0,.28); }
+    @media (max-width: 900px) { .app { grid-template-columns: 1fr; } aside { height: 40vh; } #map { height: 60vh; min-height: 360px; } .fallback { left: 12px; top: 12px; } }
+    .is-embed body { overflow: hidden; }
+    .is-embed body .app,
+    .is-embed body .map-stage {
+      width: 100vw;
+      height: 100vh;
+    }
+    .is-embed body #map {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+    .is-embed body .fallback { display: none; }
+    .is-embed body .app { grid-template-columns: minmax(0, 1fr) !important; }
+    .is-embed body aside { display: none !important; }
+    .is-embed body .map-stage,
+    .is-embed body #map,
+    .is-embed body .leaflet-container {
+      width: 100% !important;
+      height: 100% !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside>
+      <header>
+        <h1>DrivePilot 即時地圖</h1>
+        <p class="hint">只顯示 Marker Builder 產生的正式 marker；每 15 秒自動重新讀取 map_points.csv。</p>
+      </header>
+      <section class="tools">
+        <button id="googleAll" type="button" data-open-url="https://www.google.com/maps">Google Maps 路線</button>
+        <button id="fitMarkers" type="button">Fit Markers</button>
+        <button type="button" data-open-url="dashboard.html">桌面戰情室</button>
+        <button type="button" data-open-url="mobile_dashboard.html">手機戰情室</button>
+        <button type="button" data-open-url="data/map_points.kml">KML</button>
+      </section>
+      <section class="group-legend">
+        <h2>Group Source</h2>
+        <div id="groupLegend">Loading</div>
+      </section>
+      <section class="compare-card">
+        <h2>24HR 市場對比</h2>
+        <div id="signalStats24h" class="compare-error">24HR 統計資料載入中</div>
+      </section>
+      <section class="recent">
+        <h2>時間篩選</h2>
+        <select id="timeWindow">
+          <option value="15">最近 15 分鐘</option>
+          <option value="30">最近 30 分鐘</option>
+          <option value="60" selected>最近 60 分鐘</option>
+          <option value="180">最近 3 小時</option>
+          <option value="1440">最近 24 小時</option>
+          <option value="all">全部</option>
+        </select>
+        <button id="refreshPlaces" class="refresh" type="button">手動刷新</button>
+        <div id="refreshStatus" class="statusline">尚未更新</div>
+      </section>
+      <section id="list"></section>
+      <section class="recent">
+        <h2>解析地址</h2>
+        <div id="recentPlaces">載入中</div>
+      </section>
+    </aside>
+    <section class="map-stage">
+      <div class="fallback">
+        <strong>即時地圖</strong><br>
+        自動刷新：每 15 秒<br>
+        <span id="mapRefreshStatus">尚未更新</span>
+        <div id="mapPointDebug">map_points：尚未讀取</div>
+      </div>
+      <div id="map"></div>
+    </section>
+  </main>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script>
+    if (!window.L) {
+      console.error("[DrivePilot Map] Leaflet failed to load");
+      throw new Error("Leaflet is not loaded");
+    }
+    console.log("[DrivePilot Map] Leaflet loaded");
+    const mapContainer = document.getElementById("map");
+    const map = L.map("map").setView([22.64, 120.32], 14);
+    const tileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      detectRetina: true,
+      attribution: "© OpenStreetMap"
+    });
+    tileLayer.on("tileerror", (event) => console.warn("[DrivePilot Map] tile load failed", event && event.tile && event.tile.src ? event.tile.src : event));
+    tileLayer.addTo(map);
+    console.log("[DrivePilot Map] tile layer added");
+    function invalidateMapSize(reason = "layout") {
+      if (!map || typeof map.invalidateSize !== "function") return;
+      map.invalidateSize();
+      const rect = mapContainer.getBoundingClientRect();
+      console.log("[DrivePilot Map] invalidateSize " + reason + ": " + Math.round(rect.width) + " x " + Math.round(rect.height));
+    }
+
+    function scheduleMapResize(reason = "layout") {
+      setTimeout(() => invalidateMapSize(reason + " 100ms"), 100);
+      setTimeout(() => invalidateMapSize(reason + " 300ms"), 300);
+    }
+
+    scheduleMapResize("init");
+    window.addEventListener("load", () => {
+      setTimeout(() => invalidateMapSize("window load 150ms"), 150);
+    });
+    window.addEventListener("resize", () => scheduleMapResize("window resize"));
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => scheduleMapResize("map container resize")).observe(mapContainer);
+    }
+
+    const liveMarkers = new Map();
+    const placesByKey = new Map();
+    const list = document.getElementById("list");
+    const recentPlaces = document.getElementById("recentPlaces");
+    const timeWindow = document.getElementById("timeWindow");
+    const refreshStatus = document.getElementById("refreshStatus");
+    const mapRefreshStatus = document.getElementById("mapRefreshStatus");
+    const mapPointDebug = document.getElementById("mapPointDebug");
+    const googleAll = document.getElementById("googleAll");
+    const fitMarkers = document.getElementById("fitMarkers");
+    const groupLegend = document.getElementById("groupLegend");
+    let allPlaces = [];
+    let coordinatesLoaded = false;
+    let groupColors = {
+      "_default": "#94a3b8"
+    };
+    let groupColorsLoaded = false;
+    const markerAudit = {
+      sourceFile: "",
+      rawRecords: 0,
+      parsedRecords: 0,
+      filteredRecords: 0,
+      renderedMarkers: 0,
+      skipped: {},
+      sourceBreakdown: {},
+      kindBreakdown: {},
+      confidenceBreakdown: {},
+      roughAccuracyBreakdown: {}
+    };
+    let hasAutoFitMarkers = false;
+    const mapPointDebugState = {
+      status: "尚未讀取",
+      csvRows: 0,
+      validRows: 0,
+      filteredMarkers: 0,
+      renderedMarkers: 0,
+      loadedAt: "--",
+      filterLabel: "最近 60 分鐘",
+      sourceUrl: ""
+    };
+    const markerCsvUrls = () => [
+      `data/map_points.csv?t=${Date.now()}`,
+      `../live-data/map_points.csv?t=${Date.now()}`
+    ];
+
+    const kaohsiungDistrictCenters = {
+      "\u9e7d\u57d5\u5340": [22.626, 120.284], "\u9f13\u5c71\u5340": [22.651, 120.276], "\u5de6\u71df\u5340": [22.687, 120.295],
+      "\u6960\u6893\u5340": [22.727, 120.324], "\u4e09\u6c11\u5340": [22.647, 120.322], "\u65b0\u8208\u5340": [22.628, 120.306],
+      "\u524d\u91d1\u5340": [22.627, 120.294], "\u82d3\u96c5\u5340": [22.622, 120.320], "\u524d\u93ae\u5340": [22.592, 120.314],
+      "\u65d7\u6d25\u5340": [22.612, 120.269], "\u5c0f\u6e2f\u5340": [22.565, 120.337], "\u9cf3\u5c71\u5340": [22.626, 120.356],
+      "\u5927\u5bee\u5340": [22.604, 120.395], "\u9ce5\u677e\u5340": [22.662, 120.364], "\u6797\u5712\u5340": [22.505, 120.394],
+      "\u4ec1\u6b66\u5340": [22.701, 120.348], "\u5927\u6a39\u5340": [22.693, 120.431], "\u5927\u793e\u5340": [22.730, 120.347],
+      "\u5ca1\u5c71\u5340": [22.793, 120.295], "\u6a4b\u982d\u5340": [22.854, 120.260], "\u672a\u77e5": [22.640, 120.320]
+    };
+    let mapPointLoadedCount = 0;
+    const mapDebugStats = {
+      rowsLoaded: 0,
+      mapPointsLoaded: 0,
+      sourcePlaces: 0,
+      sourceMapPoints: 0,
+      sourceDistrict: 0,
+      sourceCache: 0,
+      unresolvedCount: 0,
+      skippedNoLocation: 0
+    };
+
+    const mapPointRows = [];
+    const coordinateIndex = new Map();
+
+    function normalizeAddressKey(value) {
+      return String(value || "").replace(/\s+/g, "").trim();
+    }
+
+    function isValidLatLng(lat, lng) {
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    }
+
+    function formatDebugTime(date = new Date()) {
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
+
+    function updateMapPointDebug(next = {}) {
+      Object.assign(mapPointDebugState, next);
+      const text = `map_points：${mapPointDebugState.status} / CSV 總筆數：${mapPointDebugState.csvRows} / 有效座標：${mapPointDebugState.validRows} / 目前篩選：${mapPointDebugState.filterLabel} / 篩選 marker：${mapPointDebugState.filteredMarkers} / 已畫 marker：${mapPointDebugState.renderedMarkers} / 最後讀取：${mapPointDebugState.loadedAt}`;
+      if (mapPointDebug) mapPointDebug.textContent = text;
+      window.parent?.postMessage({ type: "drivepilot-map-debug", payload: { ...mapPointDebugState } }, "*");
+    }
+
+    function fitVisibleMarkers() {
+      const points = Array.from(liveMarkers.values())
+        .map((marker) => marker.getLatLng())
+        .filter(Boolean);
+      if (!points.length) return false;
+      map.fitBounds(L.latLngBounds(points), { padding: [28, 28], maxZoom: 15 });
+      return true;
+    }
+
+    function toCoordinateNumber(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function incrementCount(table, key) {
+      const normalized = String(key || "unknown").trim() || "unknown";
+      table[normalized] = (table[normalized] || 0) + 1;
+    }
+
+    function resetMarkerAudit(sourceFile = "") {
+      markerAudit.sourceFile = sourceFile;
+      markerAudit.rawRecords = 0;
+      markerAudit.parsedRecords = 0;
+      markerAudit.filteredRecords = 0;
+      markerAudit.renderedMarkers = 0;
+      markerAudit.skipped = {};
+      resetMarkerAuditBreakdowns();
+    }
+
+    function resetMarkerAuditBreakdowns() {
+      markerAudit.sourceBreakdown = {};
+      markerAudit.kindBreakdown = {};
+      markerAudit.confidenceBreakdown = {};
+      markerAudit.roughAccuracyBreakdown = {};
+    }
+
+    function classifyMarkerAccuracy(place) {
+      const address = String((place && place.address) || "");
+      const source = String((place && place.source) || "");
+      const confidence = String((place && place.confidence) || "");
+      const kind = String((place && place.kind) || "");
+      if (source === "map_points") return "static_map_points";
+      if (kind === "description" || confidence === "low") return "description_or_low_confidence";
+      if (address && !/[0-9０-９一二三四五六七八九十]+(?:號|号)/.test(address)) return "road_or_landmark_level";
+      return "precise_or_standardized";
+    }
+
+    function logMarkerAudit() {
+      const summary = {
+        sourceFile: markerAudit.sourceFile,
+        loadedRecords: markerAudit.rawRecords,
+        parsedRecords: markerAudit.parsedRecords,
+        filteredRecords: markerAudit.filteredRecords,
+        renderedMarkers: markerAudit.renderedMarkers,
+        skipped: markerAudit.skipped,
+        sourceBreakdown: markerAudit.sourceBreakdown,
+        kindBreakdown: markerAudit.kindBreakdown,
+        confidenceBreakdown: markerAudit.confidenceBreakdown,
+        roughAccuracyBreakdown: markerAudit.roughAccuracyBreakdown
+      };
+      console.groupCollapsed("[DrivePilot Marker Audit]");
+      console.log(summary);
+      console.table({
+        source: markerAudit.sourceBreakdown,
+        kind: markerAudit.kindBreakdown,
+        confidence: markerAudit.confidenceBreakdown,
+        roughAccuracy: markerAudit.roughAccuracyBreakdown,
+        skipped: markerAudit.skipped
+      });
+      console.groupEnd();
+      window.drivePilotMarkerAudit = summary;
+    }
+
+    function addCoordinateRow(address, lat, lng, note = "", source = "map_points", aliases = "") {
+      const keys = [address, note, aliases]
+        .flatMap((value) => String(value || "").split(/[|;?,?\s]+/))
+        .map(normalizeAddressKey)
+        .filter(Boolean);
+      if (!keys.length || !isValidLatLng(lat, lng)) return;
+      const row = { address, lat, lng, note, aliases, source, keys };
+      mapPointRows.push(row);
+      keys.forEach((key) => {
+        if (!coordinateIndex.has(key)) coordinateIndex.set(key, row);
+      });
+    }
+
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (quoted) {
+          if (char === '"' && next === '"') {
+            field += '"';
+            i += 1;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field);
+          rows.push(row);
+          row = [];
+          field = "";
+        } else if (char !== "\r") {
+          field += char;
+        }
+      }
+      if (field.length || row.length) {
+        row.push(field);
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function parseTimestamp(timestamp) {
+      const date = new Date(String(timestamp || "").replace(" ", "T"));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function selectedWindow() {
+      return normalizeWindow(timeWindow.value);
+    }
+
+    function normalizeWindow(value) {
+      const text = String(value || "60").replace("m", "");
+      if (text === "today") return "all";
+      return ["15", "30", "60", "180", "1440", "all"].includes(text) ? text : "60";
+    }
+
+    function windowLabel() {
+      const mode = selectedWindow();
+      if (mode === "all") return "全部";
+      if (mode === "180") return "最近 3 小時";
+      if (mode === "1440") return "最近 24 小時";
+      return `最近 ${mode} 分鐘`;
+    }
+
+    function withinWindow(timestamp) {
+      const mode = selectedWindow();
+      if (mode === "all") return true;
+      const date = parseTimestamp(timestamp);
+      if (!date) return false;
+      const now = new Date();
+      return now - date <= Number(mode) * 60 * 1000;
+    }
+
+    function shortText(value, max = 42) {
+      const text = String(value || "");
+      return text.length > max ? `${text.slice(0, max)}...` : text;
+    }
+
+    function formatCount(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? String(number) : "0";
+    }
+
+    function formatDelta(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "-";
+      if (number > 0) return `+${number}`;
+      return String(number);
+    }
+
+    function formatShortTime(value) {
+      const text = String(value || "").trim();
+      return text || "-";
+    }
+
+    function normalizeSignalStatsPayload(payload) {
+      if (!payload || typeof payload !== "object") return null;
+      return payload.ok === true && payload.data ? payload.data : payload;
+    }
+
+    function renderSignalStats24h(payload) {
+      const target = document.getElementById("signalStats24h");
+      if (!target) return;
+      const data = normalizeSignalStatsPayload(payload);
+      if (!data || typeof data !== "object") {
+        target.className = "compare-error";
+        target.textContent = "24HR 統計資料讀取失敗";
+        return;
+      }
+      const current = data.current_24h || {};
+      const delta = data.delta || {};
+      target.className = "";
+      target.innerHTML = `
+        <div class="compare-grid">
+          <div class="compare-item"><strong>${escapeHtml(formatCount(current.total_signals))}</strong><span>總訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(current.locatable_signals))}</strong><span>可定位</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(current.personal_alerts))}</strong><span>個人提醒</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(current.unique_groups))}</strong><span>活躍群組</span></div>
+        </div>
+        <div class="compare-delta">
+          <strong>對比前 24HR</strong><br>
+          總訊號 ${escapeHtml(formatDelta(delta.total_signals))}　可定位 ${escapeHtml(formatDelta(delta.locatable_signals))}<br>
+          個人提醒 ${escapeHtml(formatDelta(delta.personal_alerts))}　活躍群組 ${escapeHtml(formatDelta(delta.unique_groups))}
+        </div>
+        <div class="compare-meta">
+          最後訊號：${escapeHtml(formatShortTime(current.last_signal_time))}<br>
+          統計產生：${escapeHtml(formatShortTime(data.generated_at))}
+        </div>
+      `;
+    }
+
+    async function loadSignalStats24h() {
+      const target = document.getElementById("signalStats24h");
+      try {
+        const response = await fetch(`data/signal_stats_24h.json?t=${Date.now()}`, { cache: "no-store" });
+        if (response.status === 404) {
+          if (target) target.textContent = "尚無 24HR 統計資料，請先執行 Signal 24HR Compare.bat";
+          return;
+        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        let payload;
+        try {
+          payload = await response.json();
+        } catch (_) {
+          if (target) target.textContent = "24HR 統計資料讀取失敗";
+          return;
+        }
+        renderSignalStats24h(payload);
+      } catch (error) {
+        console.warn("DrivePilot 24HR stats unavailable", error && error.message ? error.message : error);
+        if (target) target.textContent = "24HR 統計資料讀取失敗";
+      }
+    }
+
+    function groupName(place) {
+      return String((place && place.group) || "Unknown").trim() || "Unknown";
+    }
+
+    function groupColor(group) {
+      const name = String(group || "").trim();
+      if (groupColors[name]) return groupColors[name];
+      const keys = Object.keys(groupColors).filter((key) => key !== "_default");
+      const matched = keys.find((key) => name.includes(key) || key.includes(name));
+      return matched ? groupColors[matched] : (groupColors._default || "#94a3b8");
+    }
+
+    function groupStyle(place) {
+      return `--group-color:${escapeHtml(groupColor(groupName(place)))}`;
+    }
+
+    async function loadGroupColors() {
+      if (groupColorsLoaded) return;
+      for (const url of [`data/group_colors_public.json?t=${Date.now()}`, `../live-data/group_colors_public.json?t=${Date.now()}`]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const nextColors = await response.json();
+          if (nextColors && typeof nextColors === "object") {
+            groupColors = { ...groupColors, ...nextColors };
+            groupColorsLoaded = true;
+            return;
+          }
+        } catch (_) {}
+      }
+      groupColorsLoaded = true;
+    }
+
+    async function loadMapPointCoordinates() {
+      if (coordinatesLoaded) return;
+      let loaded = false;
+      for (const url of markerCsvUrls()) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const rows = parseCsv(await response.text());
+          const headers = (rows[0] || []).map((header) => String(header || "").trim());
+          const idx = (...names) => {
+            for (const name of names) {
+              const found = headers.findIndex((header) => header.toLowerCase() === String(name).toLowerCase());
+              if (found >= 0) return found;
+            }
+            return -1;
+          };
+          const addressIdx = idx("address", "normalized_address", "query", "label");
+          const labelIdx = idx("label", "name");
+          const noteIdx = idx("note", "raw", "alias", "text_summary");
+          const aliasesIdx = idx("aliases", "alias", "keywords");
+          const sourceIdx = idx("source");
+          const latIdx = idx("lat", "latitude");
+          const lngIdx = idx("lng", "lon", "longitude");
+          if (latIdx < 0 || lngIdx < 0) {
+            console.warn("marker coordinate CSV missing lat/lng columns, trying next source");
+            continue;
+          }
+          const csvTotal = Math.max(0, rows.length - 1);
+          let validTotal = 0;
+          rows.slice(1).forEach((row) => {
+            try {
+              const lat = Number(String(row[latIdx] || "").trim());
+              const lng = Number(String(row[lngIdx] || "").trim());
+              if (!isValidLatLng(lat, lng)) {
+                console.warn("skip invalid map_points row", row);
+                return;
+              }
+              const address = addressIdx >= 0 ? String(row[addressIdx] || "").trim() : "";
+              const label = labelIdx >= 0 ? String(row[labelIdx] || "").trim() : "";
+              const note = noteIdx >= 0 ? String(row[noteIdx] || "").trim() : "";
+              const aliases = aliasesIdx >= 0 ? String(row[aliasesIdx] || "").trim() : "";
+              const primary = address || label || note || aliases;
+              if (!primary) return;
+              const source = sourceIdx >= 0 && row[sourceIdx] ? String(row[sourceIdx]).trim() : "map_points";
+              addCoordinateRow(primary, lat, lng, note || label || address, source, [address, label, note, aliases].join(" "));
+              mapPointLoadedCount += 1;
+              validTotal += 1;
+            } catch (error) {
+              console.warn("skip marker coordinate row", error);
+            }
+          });
+          updateMapPointDebug({
+            status: "讀取成功",
+            csvRows: csvTotal,
+            validRows: validTotal,
+            loadedAt: formatDebugTime(),
+            sourceUrl: url.split("?")[0]
+          });
+          loaded = true;
+          break;
+        } catch (error) {
+          console.warn("marker coordinate CSV unavailable, trying next source", error);
+        }
+      }
+      if (!loaded) {
+        console.warn("marker coordinate CSV unavailable");
+        updateMapPointDebug({ status: "讀取失敗", loadedAt: formatDebugTime() });
+      }
+      mapDebugStats.mapPointsLoaded = mapPointLoadedCount;
+      console.log("[DrivePilot Map] marker coordinates loaded: " + mapDebugStats.mapPointsLoaded);
+      coordinatesLoaded = true;
+    }
+
+    function mapActions(address, place) {
+      const encoded = encodeURIComponent(address || "");
+      return `<div class="actions"><a href="https://www.google.com/maps/search/?api=1&query=${encoded}" target="_blank" rel="noreferrer">Search</a><a href="https://www.google.com/maps/dir/?api=1&destination=${encoded}" target="_blank" rel="noreferrer">Navigate</a><button type="button" data-copy-address="${escapeHtml(address)}">Copy</button></div>`;
+    }
+
+    function badge(value, type = "") {
+      const safe = escapeHtml(value || "");
+      return safe ? `<span class="badge ${escapeHtml(type || safe)}">${safe}</span>` : "";
+    }
+
+    function formatConfidence(value) {
+      const map = { high: "解析：高", medium: "解析：中", low: "解析：低" };
+      return map[value] || "解析：未知";
+    }
+
+    function formatKind(value) {
+      const map = {
+        place: "Address",
+        place_alias: "Landmark",
+        landmark: "Landmark",
+        start: "Start",
+        end: "End",
+        description: "Pending",
+        dispatcher_private: "Personal reminder"
+      };
+      return map[value] || value || "Address";
+    }
+
+    function placeDetails(place, includeText = false) {
+      const timeText = place.timestamp || place.lastSeen || "--";
+      const sourceText = place.source || place.group || "map_points";
+      const countText = place.count || "1";
+      return `<div class="place-card">
+        <div class="place-title">${escapeHtml(place.address || "--")}</div>
+        <div class="place-row"><span>Time</span>${escapeHtml(timeText)}</div>
+        <div class="place-row"><span>Source</span>${escapeHtml(sourceText)}</div>
+        <div class="place-row"><span>Count</span>${escapeHtml(countText)}</div>
+        <div class="place-row"><span>解析可信度</span>${badge(formatConfidence(place.confidence), place.confidence || "unknown")}</div>
+        <div class="place-row"><span>定位狀態</span>${badge("定位：已定位", "high")}</div>
+        <div class="place-row"><span>Location source</span>${escapeHtml(place._coordSource || place.source || "map_points")}</div>
+      </div>`;
+    }
+
+    function getArea(address) {
+      const text = String(address || "");
+      const match = text.match(/(?:\u9ad8\u96c4\u5e02)?([\u4e00-\u9fff]{1,4}\u5340)/);
+      return match ? match[1] : "\u672a\u77e5";
+    }
+
+    function getAreaFromPlace(place) {
+      return getArea([place.address, place.label, place.note, place.text].filter(Boolean).join(" "));
+    }
+
+    function placeKey(place) {
+      return `${place.timestamp}|${place.group}|${place.address}`;
+    }
+
+    function findMapPointMatch(place) {
+      const rawCandidates = [place.address, place.label, place.note, place.text];
+      const candidates = rawCandidates.map(normalizeAddressKey).filter(Boolean);
+      for (const candidate of candidates) {
+        if (coordinateIndex.has(candidate)) return coordinateIndex.get(candidate);
+      }
+      for (const row of mapPointRows) {
+        const rowKeys = row.keys || [row.address, row.note, row.aliases].map(normalizeAddressKey).filter(Boolean);
+        for (const candidate of candidates) {
+          for (const key of rowKeys) {
+            if (key && (candidate.includes(key) || key.includes(candidate))) return row;
+          }
+        }
+      }
+      return null;
+    }
+
+    function resolveLatLng(place, index) {
+      const explicitLat = toCoordinateNumber(place.lat);
+      const explicitLng = toCoordinateNumber(place.lng);
+      if (isValidLatLng(explicitLat, explicitLng)) {
+        return { lat: explicitLat, lng: explicitLng, source: place.source || "map_points" };
+      }
+      return { lat: NaN, lng: NaN, source: "none" };
+    }
+
+    function liveIcon(place) {
+      return L.divIcon({
+        className: "",
+        html: `<div class="live-dot ${escapeHtml(place.confidence || "low")}" style="${groupStyle(place)}"></div>`,
+        iconSize: [14, 14],
+        iconAnchor: [7, 7],
+        popupAnchor: [0, -8]
+      });
+    }
+
+    function parsePlaceRows(csvText, sourceUrl = "") {
+      const rows = parseCsv(csvText);
+      const headers = (rows[0] || []).map((header) => String(header || "").trim());
+      const index = (...names) => {
+        for (const name of names) {
+          const found = headers.findIndex((header) => header.toLowerCase() === String(name).toLowerCase());
+          if (found >= 0) return found;
+        }
+        return -1;
+      };
+      const isMapPointsFallback = sourceUrl.includes("map_points.csv");
+      markerAudit.rawRecords = Math.max(0, rows.length - 1);
+      const parsed = [];
+      rows.slice(1).forEach((row) => {
+        if (row.length < 3) {
+          incrementCount(markerAudit.skipped, "short_row");
+          return;
+        }
+        const timeIdx = index("time", "timestamp", "last_seen", "updated_at");
+        const lastSeenIdx = index("last_seen");
+        const groupIdx = index("group");
+        const kindIdx = index("kind", "type");
+        const addressIdx = index("address", "normalized_address", "label", "query");
+        const normalizedIdx = index("normalized_address");
+        const noteIdx = index("text_summary", "note", "raw", "alias");
+        const latIdx = index("lat", "latitude");
+        const lngIdx = index("lng", "lon", "longitude");
+        const sourceIdx = index("source");
+        const confidenceIdx = index("confidence");
+        const countIdx = index("count");
+        const address = addressIdx >= 0 ? row[addressIdx] : "";
+        const note = noteIdx >= 0 ? row[noteIdx] : "";
+        const place = {
+          timestamp: timeIdx >= 0 ? row[timeIdx] : "",
+          lastSeen: lastSeenIdx >= 0 ? row[lastSeenIdx] : "",
+          group: groupIdx >= 0 ? row[groupIdx] : (isMapPointsFallback ? "map_points.csv" : ""),
+          kind: kindIdx >= 0 ? row[kindIdx] : "place",
+          address: address || note,
+          normalizedAddress: normalizedIdx >= 0 ? row[normalizedIdx] : "",
+          lat: latIdx >= 0 ? row[latIdx] : "",
+          lng: lngIdx >= 0 ? row[lngIdx] : "",
+          source: sourceIdx >= 0 ? row[sourceIdx] : "map_points",
+          confidence: confidenceIdx >= 0 ? row[confidenceIdx] : (isMapPointsFallback ? "high" : "medium"),
+          count: countIdx >= 0 ? row[countIdx] : "1",
+          text: note
+        };
+        if (!place.address) {
+          incrementCount(markerAudit.skipped, "missing_address");
+          return;
+        }
+        if (!isValidLatLng(toCoordinateNumber(place.lat), toCoordinateNumber(place.lng))) {
+          incrementCount(markerAudit.skipped, "invalid_lat_lng");
+          return;
+        }
+        parsed.push(place);
+      });
+      markerAudit.parsedRecords = parsed.length;
+      return parsed;
+    }
+
+    function formatPlace(place) {
+      return placeDetails(place, true);
+    }
+
+    function addLiveMarker(place, index) {
+      try {
+        const key = placeKey(place);
+        if (liveMarkers.has(key)) return false;
+        const resolved = resolveLatLng(place, index);
+        if (!isValidLatLng(resolved.lat, resolved.lng)) {
+          mapDebugStats.skippedNoLocation += 1;
+          console.warn("skip marker invalid lat/lng", place, resolved);
+          return false;
+        }
+        if (resolved.source === "places.csv") mapDebugStats.sourcePlaces += 1;
+        else if (resolved.source === "map_points") mapDebugStats.sourceMapPoints += 1;
+        else if (resolved.source === "address_geocode_cache") mapDebugStats.sourceCache += 1;
+        place._latLngText = `${resolved.lat.toFixed(6)}, ${resolved.lng.toFixed(6)}`;
+        place._coordSource = resolved.source;
+        const marker = L.marker([resolved.lat, resolved.lng], { icon: liveIcon(place) }).addTo(map);
+        marker.bindPopup(placeDetails(place, false));
+        liveMarkers.set(key, marker);
+        placesByKey.set(key, place);
+        return true;
+      } catch (error) {
+        console.warn("skip marker due to row error", error, place);
+        return false;
+      }
+    }
+
+    function removeHiddenMarkers(visibleKeys) {
+      for (const [key, marker] of liveMarkers.entries()) {
+        if (!visibleKeys.has(key)) {
+          map.removeLayer(marker);
+          liveMarkers.delete(key);
+          placesByKey.delete(key);
+        }
+      }
+    }
+
+    function renderGroupLegend(visiblePlaces) {
+      const counts = new Map();
+      visiblePlaces.forEach((place) => {
+        const name = groupName(place);
+        counts.set(name, (counts.get(name) || 0) + 1);
+      });
+      const rows = Array.from(counts.entries())
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+        .slice(0, 6);
+      groupLegend.innerHTML = rows.length
+        ? rows.map(([name, count]) => `<div class="legend-row" style="--group-color:${escapeHtml(groupColor(name))}"><span class="group-swatch"></span><span class="legend-name" title="${escapeHtml(name)}">${escapeHtml(shortText(name, 24))}</span><span class="legend-count">${count}</span></div>`).join("")
+        : `<div class="legend-row"><span class="group-swatch" style="--group-color:${escapeHtml(groupColors._default || "#94a3b8")}"></span><span class="legend-name">No active groups</span></div>`;
+    }
+
+    function renderList(visiblePlaces) {
+      list.innerHTML = "";
+      visiblePlaces.slice().reverse().forEach((place) => {
+        const key = placeKey(place);
+        const item = document.createElement("div");
+        item.className = "item";
+        item.style.borderLeftColor = groupColor(groupName(place));
+        item.innerHTML = `<p class="name">${escapeHtml(place.address)}</p><p class="meta">${escapeHtml(shortText(place.group))}<br>${escapeHtml(place.timestamp)} ${badge(formatKind(place.kind || "place"), "kind")} ${badge(formatConfidence(place.confidence || "low"), place.confidence || "low")}</p>${mapActions(place.address, place)}`;
+        item.addEventListener("click", (event) => {
+          if (event.target.closest("a, button")) return;
+          const marker = liveMarkers.get(key);
+          if (marker) {
+            map.setView(marker.getLatLng(), 16);
+            marker.openPopup();
+          }
+        });
+        list.appendChild(item);
+      });
+    }
+
+    function updateGoogleLink(visiblePlaces) {
+      if (!visiblePlaces.length) {
+        googleAll.dataset.openUrl = "https://www.google.com/maps";
+        return;
+      }
+      const first = visiblePlaces[0];
+      const last = visiblePlaces[visiblePlaces.length - 1];
+      const waypoints = visiblePlaces.slice(1, -1).slice(0, 8).map((place) => place.address).join("|");
+      googleAll.dataset.openUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(first.address)}&destination=${encodeURIComponent(last.address)}&waypoints=${encodeURIComponent(waypoints)}&travelmode=driving`;
+    }
+
+    function applyVisiblePlaces() {
+      try {
+        const visiblePlaces = allPlaces.filter((place) => withinWindow(place.timestamp || place.lastSeen));
+        mapDebugStats.rowsLoaded = allPlaces.length;
+        mapDebugStats.sourcePlaces = 0;
+        mapDebugStats.sourceMapPoints = 0;
+        mapDebugStats.sourceDistrict = 0;
+        mapDebugStats.sourceCache = 0;
+        mapDebugStats.skippedNoLocation = 0;
+        resetMarkerAuditBreakdowns();
+        const visibleKeys = new Set(visiblePlaces.map(placeKey));
+        removeHiddenMarkers(visibleKeys);
+        let added = 0;
+        visiblePlaces.forEach((place, index) => {
+          incrementCount(markerAudit.sourceBreakdown, place.source || "unknown");
+          incrementCount(markerAudit.kindBreakdown, place.kind || "unknown");
+          incrementCount(markerAudit.confidenceBreakdown, place.confidence || "unknown");
+          incrementCount(markerAudit.roughAccuracyBreakdown, classifyMarkerAccuracy(place));
+          if (addLiveMarker(place, index)) added += 1;
+        });
+        markerAudit.filteredRecords = visiblePlaces.length;
+        markerAudit.renderedMarkers = liveMarkers.size;
+        updateMapPointDebug({
+          filteredMarkers: visiblePlaces.length,
+          renderedMarkers: liveMarkers.size,
+          filterLabel: windowLabel()
+        });
+        if (liveMarkers.size > 0 && !hasAutoFitMarkers) {
+          fitVisibleMarkers();
+          hasAutoFitMarkers = true;
+        }
+        console.log("[DrivePilot Map] markers rendered: " + liveMarkers.size);
+        console.log("[DrivePilot Map] rows loaded: " + mapDebugStats.rowsLoaded);
+        console.log("[DrivePilot Map] source map_points: " + mapDebugStats.sourceMapPoints);
+        console.log("[DrivePilot Map] source address_geocode_cache: " + mapDebugStats.sourceCache);
+        console.log("[DrivePilot Map] unresolved count: " + mapDebugStats.unresolvedCount);
+        console.log("[DrivePilot Map] skipped no location: " + mapDebugStats.skippedNoLocation);
+        logMarkerAudit();
+        renderGroupLegend(visiblePlaces);
+        renderList(visiblePlaces);
+        updateGoogleLink(visiblePlaces);
+        const recentRows = visiblePlaces.slice(-5).reverse().map(formatPlace);
+        recentPlaces.innerHTML = recentRows.length ? recentRows.map((row) => `<div>${row}</div>`).join("") : "No located points in this range";
+        return { visibleCount: visiblePlaces.length, added };
+      } catch (error) {
+        console.error("renderMarkers failed", error);
+        return { visibleCount: 0, added: 0 };
+      }
+    }
+
+    async function loadUnresolvedCount() {
+      for (const url of [`data/unresolved_addresses.csv?t=${Date.now()}`, `../live-data/unresolved_addresses.csv?t=${Date.now()}`]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const rows = parseCsv(await response.text());
+          mapDebugStats.unresolvedCount = Math.max(0, rows.length - 1);
+          return;
+        } catch (_) {}
+      }
+      mapDebugStats.unresolvedCount = 0;
+    }
+
+    async function loadRecentPlaces() {
+      try {
+        await loadGroupColors();
+        await loadUnresolvedCount();
+        let csvText = "";
+        let loadedUrl = "";
+        for (const url of markerCsvUrls()) {
+          try {
+            const response = await fetch(url, { cache: "no-store" });
+            if (response.ok) {
+              csvText = await response.text();
+              loadedUrl = url;
+              break;
+            }
+          } catch (_) {}
+        }
+        if (!csvText) throw new Error("marker CSV not ready");
+        resetMarkerAudit(loadedUrl.split("?")[0]);
+        allPlaces = parsePlaceRows(csvText, loadedUrl);
+        updateMapPointDebug({
+          status: "讀取成功",
+          csvRows: markerAudit.rawRecords,
+          validRows: markerAudit.parsedRecords,
+          loadedAt: formatDebugTime(),
+          sourceUrl: loadedUrl.split("?")[0]
+        });
+        const result = applyVisiblePlaces();
+        const message = `Located only / ${windowLabel()} / points: ${result.visibleCount} / updated: ${new Date().toLocaleTimeString()}`;
+        refreshStatus.textContent = message;
+        mapRefreshStatus.textContent = message;
+      } catch (_) {
+        recentPlaces.textContent = "No located points yet";
+        const message = `map_points unavailable / ${new Date().toLocaleTimeString()}`;
+        refreshStatus.textContent = message;
+        mapRefreshStatus.textContent = message;
+        updateMapPointDebug({ status: "讀取失敗", loadedAt: formatDebugTime() });
+      }
+    }
+
+    function setTimeWindow(value) {
+      const normalized = normalizeWindow(value);
+      if (timeWindow.value !== normalized) timeWindow.value = normalized;
+      hasAutoFitMarkers = false;
+      const result = applyVisiblePlaces();
+      const message = `Located only / ${windowLabel()} / points: ${result.visibleCount} / updated: ${new Date().toLocaleTimeString()}`;
+      refreshStatus.textContent = message;
+      mapRefreshStatus.textContent = message;
+    }
+
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "drivepilot:setTimeWindow") {
+        setTimeWindow(event.data.value);
+      } else if (event.data && event.data.type === "drivepilot:invalidateMapSize") {
+        scheduleMapResize("dashboard layout");
+      } else if (event.data && event.data.type === "drivepilot-fit-markers") {
+        fitVisibleMarkers();
+      }
+    });
+
+    timeWindow.addEventListener("change", () => setTimeWindow(timeWindow.value));
+    fitMarkers?.addEventListener("click", fitVisibleMarkers);
+    document.getElementById("refreshPlaces").addEventListener("click", () => {
+      loadRecentPlaces();
+      loadSignalStats24h();
+    });
+    document.querySelectorAll("[data-open-url]").forEach((button) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        const nextUrl = button.getAttribute("data-open-url");
+        if (nextUrl) {
+          window.open(nextUrl, "_blank", "noopener,noreferrer");
+        }
+      });
+    });
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-copy-address]");
+      if (!button) return;
+      try {
+        await navigator.clipboard.writeText(button.getAttribute("data-copy-address") || "");
+        button.textContent = "Copied";
+      } catch (_) {
+        button.textContent = "Copy failed";
+      }
+    });
+    loadRecentPlaces();
+    loadSignalStats24h();
+    setInterval(loadRecentPlaces, 15000);
+    setInterval(loadSignalStats24h, 60000);
+  </script>
+</body>
+</html>

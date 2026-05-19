@@ -1,0 +1,1993 @@
+﻿<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/drivepilot-192.svg">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="DrivePilot">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#121820">
+  <title>DrivePilot Live 手機戰情室</title>
+  <style>
+    :root {
+      --bg: #202123;
+      --panel: rgba(42, 43, 47, .94);
+      --panel-soft: rgba(47, 48, 53, .92);
+      --line: rgba(255, 255, 255, .08);
+      --line-soft: rgba(255, 255, 255, .055);
+      --text: #f1f1f1;
+      --muted: #b8bcc5;
+      --muted-2: #8d929c;
+      --blue: #4f8ecb;
+      --green: #3fb378;
+      --orange: #d38b2f;
+      --red: #d45757;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: linear-gradient(180deg, #26272b 0, var(--bg) 42%, #1f2023 100%);
+      color: var(--text);
+      letter-spacing: 0;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: 12px;
+      background: rgba(38, 39, 43, .9);
+      color: #fff;
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(12px);
+    }
+    h1 { margin: 0; font-size: 19px; font-weight: 900; }
+    main { padding: 10px; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 13px;
+      margin-bottom: 11px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.03);
+    }
+    h2 {
+      margin: 0 0 8px;
+      color: #f7f8fa;
+      font-size: 15px;
+      font-weight: 900;
+      border-left: 3px solid #737b86;
+      padding-left: 9px;
+    }
+    p { margin: 6px 0; color: #d4d8de; line-height: 1.6; }
+    a { display: inline-block; color: #d7e2ef; font-weight: 800; text-decoration: none; margin-right: 12px; }
+    .status, .hero-status, .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pill, .address-card, .decision {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--panel-soft), rgba(42,43,47,.9));
+    }
+    .pill { padding: 11px; }
+    .small { color: var(--muted); font-size: 13px; }
+    .feed { color: #d6dae0; font-size: 13px; line-height: 1.6; }
+    .feed > div { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+    .feed > div:last-child { border-bottom: 0; }
+    .statusline { margin: 8px 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+    .hero-status .pill strong { color: #fff; font-size: 18px; }
+    .topline { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .mode-pill { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; color: #dbe3ee; background: rgba(255,255,255,.045); font-size: 12px; font-weight: 900; }
+    .mode-switch { margin-top: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .mode-switch button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(42,43,47,.92);
+      color: #dce2ea;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 900;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mode-switch button.active { border-color: rgba(79,142,203,.72); box-shadow: inset 0 0 0 1px rgba(79,142,203,.18); background: rgba(79,142,203,.16); color: #d9ebff; }
+    .mode-switch button[data-mode="quiet"].active { border-color: rgba(184,188,197,.55); background: rgba(184,188,197,.12); }
+    .mode-switch button[data-mode="driving"].active { border-color: rgba(63,179,120,.68); background: rgba(63,179,120,.16); color: #d8ffe7; }
+    .mode-switch button[data-mode="off"].active { border-color: rgba(212,87,87,.68); background: rgba(212,87,87,.16); color: #ffdcdc; }
+    .mode-message { margin-top: 8px; min-height: 18px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .mode-message.error { color: #ffaaa8; }
+    .mode-message.ok { color: #9de2ba; }
+    .status-row { margin-top: 9px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .status-chip { padding: 8px 10px; border: 1px solid var(--line); border-radius: 13px; background: rgba(255,255,255,.035); }
+    .status-chip strong, .metric strong { display: block; color: #fff; font-size: 17px; line-height: 1.25; }
+    .status-chip span, .metric span { color: var(--muted-2); font-size: 12px; font-weight: 800; }
+    .status-ok strong { color: #8be0ae; }
+    .status-warn strong { color: #f0b766; }
+    .status-alert strong { color: #ff8b8b; }
+    .metric { padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(40,41,45,.92)); min-width: 0; }
+    .compare-card { border-left: 3px solid var(--green); }
+    .compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .compare-item { padding: 9px 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.035); min-width: 0; }
+    .compare-item strong { display: block; color: #fff; font-size: 17px; line-height: 1.25; }
+    .compare-item span { display: block; margin-top: 2px; color: var(--muted-2); font-size: 12px; font-weight: 800; }
+    .compare-meta { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .compare-error { color: #f0b766; font-size: 13px; line-height: 1.6; }
+    .radar-card { border-left: 3px solid var(--blue); }
+    .radar-state { margin: 0 0 8px; color: #fff; font-size: 20px; font-weight: 900; }
+    .radar-note { color: var(--muted); line-height: 1.55; font-size: 14px; }
+    .signal-card {
+      padding: 11px 12px;
+      margin-bottom: 8px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      min-width: 0;
+    }
+    .signal-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 7px; }
+    .signal-title { color: #fff; font-size: 15px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .signal-meta, .signal-summary { color: var(--muted); font-size: 13px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+    .rank-row { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+    .rank-row:last-child { border-bottom: 0; }
+    .rank-no { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: rgba(79,142,203,.14); color: #9cc4ee; font-size: 12px; font-weight: 900; }
+    .rank-main { min-width: 0; }
+    .rank-name { color: #fff; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rank-sub { color: var(--muted-2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .empty { color: var(--muted-2); padding: 10px 0; }
+    .address-card {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      padding: 12px 14px 12px 20px;
+      margin-bottom: 9px;
+      line-height: 1.5;
+      border-left: 3px solid #565e69;
+    }
+    .feed .address-card div { border-bottom: 0; padding: 0; }
+    .address-card.high { border-left-color: var(--green); }
+    .address-card.pending { border-left-color: var(--orange); }
+    .info-card {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0 0 12px;
+      padding: 18px 18px 18px 28px;
+      border: 1px solid var(--line);
+      border-left: 3px solid #596675;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    .info-card.high { border-left-color: var(--green); }
+    .info-card.pending { border-left-color: var(--orange); }
+    .info-title {
+      margin: 0 0 14px;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.5;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .address-card .place-title,
+    .address-card .place-row,
+    .address-card .muted,
+    .info-title,
+    .info-field,
+    .info-value,
+    .info-card .actions {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .info-field {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      padding: 9px 0;
+      border-top: 1px solid var(--line-soft);
+    }
+    .info-field:first-of-type { border-top: 0; padding-top: 0; }
+    .info-label {
+      margin-bottom: 4px;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .info-value {
+      color: #e1e4e8;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .place-title { font-size: 15px; font-weight: 900; color: #fff; margin-bottom: 7px; line-height: 1.4; }
+    .place-row { margin: 4px 0; color: #d5dae0; }
+    .place-row span:first-child { display: inline-block; min-width: 68px; color: var(--muted); font-size: 12px; }
+    .muted { color: var(--muted-2); font-size: 12px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 900; line-height: 1.5; border: 1px solid transparent; }
+    .badge.high { background: rgba(63,179,120,.16); color: #78d8a5; border-color: rgba(63,179,120,.38); }
+    .badge.medium { background: rgba(211,139,47,.16); color: #f0b766; border-color: rgba(211,139,47,.38); }
+    .badge.low { background: rgba(154,163,175,.13); color: #c3c9d0; border-color: rgba(154,163,175,.28); }
+    .badge.kind { background: rgba(79,142,203,.13); color: #9cc4ee; border-color: rgba(79,142,203,.32); }
+    .actions, .controlbar { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 7px; }
+    .actions a, .actions button, .controlbar button, .quickbar a, .quickbar button {
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: rgba(42,43,47,.92);
+      color: #e7ebf0;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      text-align: center;
+      text-decoration: none;
+    }
+    .actions a, .actions button { padding: 7px 9px; }
+    .quickbar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .quickbar a, .quickbar button { padding: 10px; margin: 0; }
+    .controlbar button { padding: 9px 10px; }
+    .actions a:hover, .actions button:hover, .quickbar a:hover, .quickbar button:hover, .controlbar button:hover { border-color: rgba(255,255,255,.16); background: rgba(52,53,58,.95); }
+    .badge, .actions, .actions a, .actions button, .controlbar button, .quickbar a, .quickbar button, .info-label {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .decision { margin-top: 8px; padding: 12px; color: #d6dae0; line-height: 1.65; }
+    .analyze-button {
+      width: 100%;
+      min-height: 44px;
+      border: 1px solid rgba(79,142,203,.46);
+      border-radius: 14px;
+      background: rgba(79,142,203,.14);
+      color: #d9ebff;
+      font: inherit;
+      font-weight: 900;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .analysis-card {
+      margin-top: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      color: #d6dae0;
+      line-height: 1.6;
+    }
+    .analysis-card h3 {
+      margin: 0 0 8px;
+      color: #fff;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+    .analysis-section {
+      padding-top: 10px;
+      margin-top: 10px;
+      border-top: 1px solid var(--line-soft);
+    }
+    .analysis-title {
+      color: var(--muted-2);
+      font-size: 12px;
+      font-weight: 900;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .analysis-list {
+      margin: 6px 0 0;
+      padding: 0;
+      list-style: none;
+    }
+    .analysis-list li {
+      padding: 5px 0;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    details summary { cursor: pointer; color: #f7f8fa; font-weight: 800; }
+    .compact-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+    .compact-sub { color: var(--muted-2); font-size: 12px; line-height: 1.4; }
+    .market-card { border-left: 3px solid var(--blue); }
+    .market-topline { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-bottom: 10px; }
+    .market-status { color: #fff; font-size: 22px; font-weight: 900; line-height: 1.2; }
+    .market-note { color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .market-report-card { border-left: 3px solid var(--green); }
+    .market-report-card.attention { border-left-color: var(--orange); }
+    .market-report-card.alert { border-left-color: var(--red); }
+    .market-report-head { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; margin-bottom: 10px; }
+    .market-report-level { color: #fff; font-size: 22px; font-weight: 900; line-height: 1.2; }
+    .market-report-meta { color: var(--muted-2); font-size: 12px; line-height: 1.45; text-align: right; }
+    .market-report-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .market-report-item { padding: 9px 10px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.035); min-width: 0; }
+    .market-report-item strong { display: block; color: #fff; font-size: 17px; line-height: 1.25; overflow-wrap: anywhere; word-break: break-word; }
+    .market-report-item span { display: block; margin-top: 2px; color: var(--muted-2); font-size: 12px; font-weight: 800; }
+    .market-report-notes { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
+    .mini-top-areas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .mini-top-areas span { padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid var(--line); color: #dce2ea; font-size: 12px; font-weight: 800; }
+    .short-card {
+      border: 1px solid var(--line);
+      border-left: 3px solid #596675;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      padding: 12px 13px 12px 18px;
+      margin-bottom: 9px;
+      min-width: 0;
+    }
+    .short-card.locatable { border-left-color: var(--green); }
+    .short-card.pending { border-left-color: var(--orange); }
+    .short-title { color: #fff; font-size: 15px; font-weight: 900; line-height: 1.42; overflow-wrap: anywhere; word-break: break-word; }
+    .short-meta { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.45; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .short-source { margin-top: 4px; color: var(--muted-2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .detail-box { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 12px; line-height: 1.55; overflow-wrap: anywhere; word-break: break-word; }
+    .feed-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line-soft);
+      min-width: 0;
+    }
+    .feed-row:last-child { border-bottom: 0; }
+    .feed-row-main { min-width: 0; }
+    .feed-row-title { color: #eef1f5; font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .feed-row-sub { color: var(--muted-2); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .more-stack details { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+    .more-stack details:last-child { border-bottom: 0; }
+    .mini-map-card { overflow: hidden; }
+    .mini-map {
+      position: relative;
+      height: 220px;
+      min-height: 220px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #242528;
+      overflow: hidden;
+    }
+    .mini-map .leaflet-tile-pane { filter: grayscale(.55) invert(.78) brightness(.98) contrast(1.1) saturate(.7); }
+    .mini-map .leaflet-control-attribution { background: rgba(13,15,18,.76) !important; color: #c7cdd5 !important; }
+    .mini-map .leaflet-popup-content-wrapper, .mini-map .leaflet-popup-tip { background: rgba(32,33,36,.96); color: var(--text); border: 1px solid var(--line); }
+    .mini-marker {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      margin: -6px 0 0 -6px;
+      border: 2px solid rgba(255,255,255,.72);
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 4px rgba(63,179,120,.14), 0 10px 20px rgba(0,0,0,.32);
+      padding: 0;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .mini-marker.medium { background: var(--orange); box-shadow: 0 0 0 4px rgba(211,139,47,.14), 0 10px 20px rgba(0,0,0,.32); }
+    .mini-marker.low { background: #9aa3af; box-shadow: 0 0 0 4px rgba(154,163,175,.14), 0 10px 20px rgba(0,0,0,.32); }
+    .mini-map-empty {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .mini-popup {
+      margin-top: 9px;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(32,33,36,.82);
+      color: #dce2ea;
+      font-size: 12px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    select { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 13px; background: rgba(42,43,47,.92); color: var(--text); }
+    select option { background: #2a2b2f; color: var(--text); }
+  </style>
+</head>
+<body>
+  <header id="top">
+    <div class="topline">
+      <h1>DrivePilot Live</h1>
+      <span id="modeBadge" class="mode-pill">模式：--</span>
+    </div>
+    <div id="headerStatus" class="status-row">
+      <div class="status-chip"><strong>檢查中</strong><span>系統狀態</span></div>
+      <div class="status-chip"><strong>--</strong><span>最後通知</span></div>
+    </div>
+    <div id="modeSwitch" class="mode-switch" aria-label="DrivePilot mode switch">
+      <button type="button" data-mode="quiet">Quiet</button>
+      <button type="button" data-mode="radar">Radar</button>
+      <button type="button" data-mode="driving">Driving</button>
+      <button type="button" data-mode="off">Off</button>
+    </div>
+    <div id="modeMessage" class="mode-message"></div>
+  </header>
+  <main>
+    <section id="marketReportCard" class="card market-report-card">
+      <div class="compact-header">
+        <h2>Market Report / 市場報告</h2>
+        <span id="marketReportStatus" class="compact-sub">載入中</span>
+      </div>
+      <div id="marketReportContent">
+        <div class="market-report-level">讀取中</div>
+        <div class="market-note">正在讀取市場報告。</div>
+      </div>
+    </section>
+    <section class="card mini-map-card">
+      <div class="compact-header">
+        <h2>熱區地圖</h2>
+        <span id="miniMapStatus" class="compact-sub">載入中</span>
+      </div>
+      <div id="miniMap" class="mini-map">
+        <div class="mini-map-empty">正在讀取已定位訊號</div>
+      </div>
+      <div id="miniMapPopup" class="mini-popup" hidden></div>
+    </section>
+    <section class="card market-card">
+      <div class="compact-header">
+        <h2>市場摘要</h2>
+        <span id="filterStatus" class="compact-sub">載入中</span>
+      </div>
+      <div id="radarState">
+        <div class="radar-state">載入中</div>
+        <div class="radar-note">正在讀取最近市場訊號。</div>
+      </div>
+      <div id="todayOverview" class="metric-grid">
+        <div class="metric"><strong>--</strong><span>60 分鐘訊號</span></div>
+        <div class="metric"><strong>--</strong><span>解析地址</span></div>
+        <div class="metric"><strong>--</strong><span>熱區事件</span></div>
+        <div class="metric"><strong>--</strong><span>個人提醒</span></div>
+        <div class="metric"><strong id="marketDataUpdatedAt">--</strong><span>24HR 最後更新</span></div>
+        <div class="metric"><strong id="markerUpdatedAt">--</strong><span>Marker 最後更新</span></div>
+        <div class="metric"><strong id="markerCount">--</strong><span>Marker 數量</span></div>
+      </div>
+    </section>
+    <section class="card compare-card">
+      <h2>24HR 市場對比</h2>
+      <div id="signalStats24h" class="compare-error">24HR 統計資料載入中</div>
+    </section>
+    <section class="card">
+      <h2>熱門區域 Top 5</h2>
+      <div id="areaRanking">載入中</div>
+    </section>
+    <section class="card">
+      <h2>重點訊號</h2>
+      <div id="valueSignals" class="feed">載入中</div>
+    </section>
+    <section class="card">
+      <div class="compact-header">
+        <h2>解析高訊號</h2>
+        <span id="placeStatus" class="compact-sub"></span>
+      </div>
+      <div id="highConfidencePlaces" class="feed">載入中</div>
+    </section>
+    <section class="card">
+        <h2>待補座標 / 未解析</h2>
+      <div id="pendingPlaces" class="feed">載入中</div>
+    </section>
+    <section class="card">
+      <h2>最新訊號</h2>
+      <div id="notificationStatus" class="statusline"></div>
+      <div id="recentNotifications" class="feed">載入中</div>
+    </section>
+    <section class="card">
+      <h2>更多 / 診斷</h2>
+      <div class="more-stack">
+        <details>
+          <summary>一鍵分析</summary>
+          <button id="analyzeNow" class="analyze-button" type="button">Analyze Now</button>
+          <div id="analysisResult" class="analysis-card">
+            <div class="small">按下後整理最近 60 分鐘 LINE 車群訊號。</div>
+          </div>
+        </details>
+        <details>
+          <summary>時間篩選與操作</summary>
+          <select id="timeWindow">
+            <option value="15">最近 15 分鐘</option>
+            <option value="30">最近 30 分鐘</option>
+            <option value="60" selected>最近 60 分鐘</option>
+            <option value="180">最近 3 小時</option>
+            <option value="1440">最近 24 小時</option>
+            <option value="all">全部</option>
+          </select>
+          <div class="quickbar" style="margin-top: 10px;">
+            <button id="refreshNow" type="button">重新整理</button>
+            <a href="index.html">即時地圖</a>
+            <a href="https://discord.com/channels/@me" target="_blank" rel="noreferrer">Discord</a>
+            <a href="#top">回頂部</a>
+          </div>
+        </details>
+        <details>
+          <summary>目前位置 / 觀察</summary>
+          <select id="currentArea">
+            <option value="">其他 / 未設定</option>
+            <option value="仁武區">仁武區</option>
+            <option value="左營區">左營區</option>
+            <option value="三民區">三民區</option>
+            <option value="鼓山區">鼓山區</option>
+            <option value="新興區">新興區</option>
+            <option value="苓雅區">苓雅區</option>
+            <option value="前鎮區">前鎮區</option>
+            <option value="小港區">小港區</option>
+            <option value="鳳山區">鳳山區</option>
+            <option value="楠梓區">楠梓區</option>
+            <option value="大寮區">大寮區</option>
+            <option value="大樹區">大樹區</option>
+            <option value="橋頭區">橋頭區</option>
+            <option value="岡山區">岡山區</option>
+          </select>
+          <div id="locationAdvice" class="decision">選擇目前位置後顯示市場觀察文字。</div>
+          <div class="controlbar">
+            <button id="startObservation" type="button">開始觀察</button>
+            <button id="stopObservation" type="button">停止觀察</button>
+            <button id="resetObservation" type="button">重置觀察</button>
+          </div>
+          <div id="observationStatus" class="statusline">尚未開始觀察</div>
+          <div id="observationSummary" class="decision">按下開始觀察後，DrivePilot 會用目前時間之後的地址資料做 15 分鐘市場觀察。</div>
+        </details>
+        <details>
+          <summary>熱區細節 / 解析地址</summary>
+          <div id="hotZoneStatus" class="statusline"></div>
+          <div id="marketSummary" class="feed">載入中</div>
+          <div id="recentPlaces" class="feed">載入中</div>
+        </details>
+        <details>
+          <summary>資料限制</summary>
+          <p>DrivePilot 只做觀察與整理，不自動處理訂單、不操作 LINE、不讀 LINE 資料庫。</p>
+          <div class="status">
+            <div class="pill"><strong>隱藏 999+</strong><br><span class="small">只看整理結果</span></div>
+            <div class="pill"><strong>不講錯過</strong><br><span class="small">避免看單焦慮</span></div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </main>
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script>
+    const currentAreaKey = "drivepilot_current_area";
+    const observationStartKey = "drivepilot_observation_start_time";
+    const observationStopKey = "drivepilot_observation_stop_time";
+    const observationActiveKey = "drivepilot_observation_active";
+    let refreshInFlight = false;
+    let currentDrivePilotMode = "--";
+    let latestMiniMapPlaces = [];
+    let resolvedLocationKeys = new Set();
+    let unresolvedLocationKeys = new Set();
+    let miniMapInstance = null;
+    let miniMapLayer = null;
+    let miniMarkerLayer = null;
+    let mobileMapPointsLoaded = false;
+    let mobileMapPointLoadedCount = 0;
+    const mobileMapPointRows = [];
+    const mobileCoordinateIndex = new Map();
+    const mobileMapStats = {
+      rowsLoaded: 0,
+      mapPointsLoaded: 0,
+      sourcePlaces: 0,
+      sourceMapPoints: 0,
+      sourceDistrict: 0,
+      sourceCache: 0,
+      unresolvedCount: 0,
+      skippedNoLocation: 0
+    };
+    const kaohsiungDistrictCenters = {
+      "鹽埕區": [22.626, 120.284], "鼓山區": [22.651, 120.276], "左營區": [22.687, 120.295],
+      "楠梓區": [22.727, 120.324], "三民區": [22.647, 120.322], "新興區": [22.628, 120.306],
+      "前金區": [22.627, 120.294], "苓雅區": [22.622, 120.320], "前鎮區": [22.592, 120.314],
+      "旗津區": [22.612, 120.269], "小港區": [22.565, 120.337], "鳳山區": [22.626, 120.356],
+      "大寮區": [22.604, 120.395], "鳥松區": [22.662, 120.364], "林園區": [22.505, 120.394],
+      "仁武區": [22.701, 120.348], "大樹區": [22.693, 120.431], "大社區": [22.730, 120.347],
+      "岡山區": [22.793, 120.295], "橋頭區": [22.854, 120.260], "未知": [22.640, 120.320]
+    };
+
+    async function loadText(path) {
+      const cachePath = `${path}?t=${Date.now()}`;
+      const fallbackPath = path.startsWith("data/") ? `../live-data/${path.slice(5)}?t=${Date.now()}` : cachePath;
+      for (const url of Array.from(new Set([cachePath, fallbackPath]))) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        try {
+          const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+          if (response.ok) return response.text();
+          console.warn(`DrivePilot mobile fetch failed: ${url} status=${response.status}`);
+        } catch (error) {
+          console.warn(`DrivePilot mobile fetch error: ${url}`, error && error.message ? error.message : error);
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+      return "";
+    }
+
+    async function loadOptionalText(paths) {
+      for (const path of paths) {
+        const text = await loadText(path);
+        if (text) return text;
+      }
+      return "";
+    }
+
+    function parseJsonSafe(text, fallback = null) {
+      try { return text ? JSON.parse(text) : fallback; } catch (_) { return fallback; }
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (quoted) {
+          if (char === '"' && next === '"') {
+            field += '"';
+            i += 1;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field);
+          rows.push(row);
+          row = [];
+          field = "";
+        } else if (char !== "\r") {
+          field += char;
+        }
+      }
+      if (field.length || row.length) {
+        row.push(field);
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function normalizeWindow(value) {
+      const text = String(value || "60").replace("m", "");
+      if (text === "today") return "all";
+      return ["15", "30", "60", "180", "1440", "all"].includes(text) ? text : "60";
+    }
+
+    function selectedWindow() {
+      return normalizeWindow(document.getElementById("timeWindow").value);
+    }
+
+    function windowLabel() {
+      const mode = selectedWindow();
+      if (mode === "all") return "全部";
+      if (mode === "180") return "最近 3 小時";
+      if (mode === "1440") return "最近 24 小時";
+      return `最近 ${mode} 分鐘`;
+    }
+
+    function parseTimestamp(timestamp) {
+      const date = new Date(String(timestamp || "").replace(" ", "T"));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function withinWindow(timestamp) {
+      const mode = selectedWindow();
+      if (mode === "all") return true;
+      const date = parseTimestamp(timestamp);
+      if (!date) return false;
+      const now = new Date();
+      return now - date <= Number(mode) * 60 * 1000;
+    }
+
+    function shortText(value, max = 36) {
+      const text = String(value || "");
+      return text.length > max ? `${text.slice(0, max)}...` : text;
+    }
+
+    function formatCount(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? String(number) : "0";
+    }
+
+    function formatDelta(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "0";
+      if (number > 0) return `+${number}`;
+      return String(number);
+    }
+
+    function formatShortTime(value) {
+      const text = String(value || "").trim();
+      if (!text) return "-";
+      const parts = text.split(/\s+/);
+      return parts.length > 1 ? parts[1].slice(0, 5) : text;
+    }
+
+    function reportValue(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      return String(value);
+    }
+
+    function reportCount(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      const number = Number(value);
+      return Number.isFinite(number) ? String(number) : "—";
+    }
+
+    function reportRatio(value) {
+      if (value === null || value === undefined || value === "") return "—";
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "—";
+      return `${(number * 100).toFixed(1)}%`;
+    }
+
+    function marketLevelText(value) {
+      const map = {
+        cold: "偏冷",
+        normal: "正常",
+        active: "活躍",
+        noisy: "洗頻注意",
+        unknown: "未知"
+      };
+      return map[value] || "未知";
+    }
+
+    function marketReportClass(overall, level) {
+      if (overall === "ok" && level !== "noisy") return "card market-report-card";
+      if (level === "noisy" || overall === "attention") return "card market-report-card attention";
+      return "card market-report-card alert";
+    }
+
+    function renderMarketReport(payload) {
+      const card = document.getElementById("marketReportCard");
+      const status = document.getElementById("marketReportStatus");
+      const target = document.getElementById("marketReportContent");
+      if (!card || !status || !target) return;
+      if (!payload || typeof payload !== "object") {
+        card.className = "card market-report-card attention";
+        status.textContent = "讀取失敗";
+        target.innerHTML = `
+          <div class="market-report-level">暫無市場報告</div>
+          <div class="market-note">請確認 market_report.json 是否已產生。</div>
+        `;
+        return;
+      }
+      const market = payload.market_24h || {};
+      const markers = payload.markers || {};
+      const queue = payload.missing_coordinate_queue || {};
+      const summary = payload.summary || {};
+      const overall = (payload.status || {}).overall || "";
+      const level = summary.market_signal_level || "unknown";
+      card.className = marketReportClass(overall, level);
+      status.textContent = reportValue(payload.generated_at);
+      target.innerHTML = `
+        <div class="market-report-head">
+          <div>
+            <div class="market-report-level">${escapeHtml(marketLevelText(level))}</div>
+            <div class="market-note">${escapeHtml(reportValue(summary.operator_note))}</div>
+          </div>
+          <div class="market-report-meta">
+            ${badge(overall === "ok" ? "OK" : "注意", overall === "ok" ? "high" : "medium")}<br>
+            ${escapeHtml(reportValue(payload.generated_at))}
+          </div>
+        </div>
+        <div class="market-report-grid">
+          <div class="market-report-item"><strong>${escapeHtml(reportValue(overall))}</strong><span>overall</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(marketLevelText(level))}</strong><span>市場狀態</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportCount(market.raw_count))}</strong><span>原始訊號</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportCount(market.deduped_count))}</strong><span>去重後訊號</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportCount(market.duplicate_count))}</strong><span>重複訊號</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportRatio(market.duplicate_ratio))}</strong><span>重複比例</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportCount(markers.output_markers))}</strong><span>Marker 數量</span></div>
+          <div class="market-report-item"><strong>${escapeHtml(reportCount(queue.final_queue_count))}</strong><span>待補座標</span></div>
+        </div>
+        <div class="market-report-notes">
+          ${escapeHtml(reportValue(summary.data_health_note))}<br>
+          ${escapeHtml(reportValue(summary.operator_note))}
+        </div>
+      `;
+    }
+
+    async function loadMarketReport() {
+      const text = await loadOptionalText(["data/market_report.json", "../live-data/market_report.json"]);
+      renderMarketReport(parseJsonSafe(text, null));
+    }
+
+    function updateMarketDataUpdatedAt(value) {
+      const target = document.getElementById("marketDataUpdatedAt");
+      if (target) target.textContent = String(value || "--").trim() || "--";
+    }
+
+    function normalizeSignalStatsPayload(payload) {
+      if (!payload || typeof payload !== "object") return null;
+      return payload.ok === true && payload.data ? payload.data : payload;
+    }
+
+    function numberOrFallback(primary, fallback) {
+      const number = Number(primary);
+      if (Number.isFinite(number)) return number;
+      const fallbackNumber = Number(fallback);
+      return Number.isFinite(fallbackNumber) ? fallbackNumber : 0;
+    }
+
+    function marketSignalState(deltaValue) {
+      const deltaNumber = Number(deltaValue);
+      if (!Number.isFinite(deltaNumber) || deltaNumber === 0) return "持平";
+      return deltaNumber > 0 ? "升溫" : "降溫";
+    }
+
+    function renderSignalStats24h(payload) {
+      const target = document.getElementById("signalStats24h");
+      if (!target) return;
+      const data = normalizeSignalStatsPayload(payload);
+      if (!data || typeof data !== "object") {
+        target.className = "compare-error";
+        target.textContent = "24HR 統計資料讀取失敗";
+        return;
+      }
+      const current = data.current_24h || {};
+      const previous = data.previous_24h || {};
+      const delta = data.delta || {};
+      updateMarketDataUpdatedAt(data.generated_at);
+      const currentRaw = numberOrFallback(current.raw_count, current.total_signals);
+      const previousRaw = numberOrFallback(previous.raw_count, previous.total_signals);
+      const rawDelta = Number.isFinite(Number(delta.raw_count)) ? Number(delta.raw_count) : currentRaw - previousRaw;
+      const deduped = numberOrFallback(current.deduped_count, currentRaw);
+      const duplicate = numberOrFallback(current.duplicate_count, Math.max(0, currentRaw - deduped));
+      target.className = "";
+      target.innerHTML = `
+        <div class="compare-grid">
+          <div class="compare-item"><strong>${escapeHtml(formatCount(currentRaw))}</strong><span>原始訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(previousRaw))}</strong><span>昨日同時段</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatDelta(rawDelta))}</strong><span>變化</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(deduped))}</strong><span>去重後訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(duplicate))}</strong><span>重複訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(marketSignalState(rawDelta))}</strong><span>觀察中</span></div>
+        </div>
+        <div class="compare-meta">
+          統計產生：${escapeHtml(formatShortTime(data.generated_at))}
+        </div>
+      `;
+    }
+
+    async function loadSignalStats24h() {
+      const target = document.getElementById("signalStats24h");
+      const stamp = Date.now();
+      const urls = [`data/signal_stats_24h.json?t=${stamp}`, `../live-data/signal_stats_24h.json?t=${stamp}`];
+      try {
+        for (const url of urls) {
+          try {
+            const response = await fetch(url, { cache: "no-store" });
+            if (response.status === 404) continue;
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            renderSignalStats24h(await response.json());
+            return;
+          } catch (error) {
+            if (url === urls[urls.length - 1]) throw error;
+          }
+        }
+        if (target) target.textContent = "尚無 24HR 統計資料，請先執行 Signal 24HR Compare.bat";
+      } catch (error) {
+        console.warn("DrivePilot mobile 24HR stats unavailable", error && error.message ? error.message : error);
+        if (target) target.textContent = "24HR 統計資料讀取失敗";
+      }
+    }
+
+    function updateMarkerHealth(payload) {
+      const updatedAt = document.getElementById("markerUpdatedAt");
+      const count = document.getElementById("markerCount");
+      if (!payload || typeof payload !== "object") {
+        if (updatedAt) updatedAt.textContent = "--";
+        if (count) count.textContent = "--";
+        return;
+      }
+      if (updatedAt) updatedAt.textContent = String(payload.generated_at || "--").trim() || "--";
+      if (count) count.textContent = formatCount(payload.output_markers);
+    }
+
+    async function loadMarkerHealth() {
+      const stamp = Date.now();
+      const urls = [`data/marker_health.json?t=${stamp}`, `../live-data/marker_health.json?t=${stamp}`];
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (response.status === 404) continue;
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          updateMarkerHealth(await response.json());
+          return;
+        } catch (error) {
+          if (url === urls[urls.length - 1]) {
+            console.warn("DrivePilot mobile marker health unavailable", error && error.message ? error.message : error);
+          }
+        }
+      }
+      updateMarkerHealth(null);
+    }
+
+    function relativeTime(timestamp) {
+      const date = parseTimestamp(timestamp);
+      if (!date) return "--";
+      const diff = Math.max(0, Date.now() - date.getTime());
+      const minutes = Math.floor(diff / 60000);
+      if (minutes < 1) return "剛剛";
+      if (minutes < 60) return `${minutes} 分鐘前`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours} 小時前`;
+      return `${Math.floor(hours / 24)} 天前`;
+    }
+
+    function isToday(timestamp) {
+      const date = parseTimestamp(timestamp);
+      if (!date) return false;
+      return date.toDateString() === new Date().toDateString();
+    }
+
+    function getNotificationText(item) {
+      return item.text || item.message || item.raw_text || item.body || (item.raw && (item.raw.text || item.raw.message)) || "";
+    }
+
+    function getNotificationTimestamp(item) {
+      return item.timestamp || item.received_at || item.time || "";
+    }
+
+    function hasDispatcherPrivate(item) {
+      const tags = Array.isArray(item.tags) ? item.tags : [];
+      return item.dispatcher_private === true || tags.includes("dispatcher_private") || item.kind === "dispatcher_private" || item.type === "dispatcher_private";
+    }
+
+    function isHighConfidence(item) {
+      return item.confidence === "high" || item.confidence_score === "high";
+    }
+
+    function isHotzone(item) {
+      const tags = Array.isArray(item.tags) ? item.tags : [];
+      return item.kind === "hotzone" || item.type === "hotzone" || tags.includes("hotzone");
+    }
+
+    function statusClass(status) {
+      if (status === "警報" || status === "alert") return "status-alert";
+      if (status === "未知" || status === "unknown" || status === "--") return "status-warn";
+      return "status-ok";
+    }
+
+    function updateModeButtons(mode) {
+      currentDrivePilotMode = mode || "--";
+      document.querySelectorAll("#modeSwitch button[data-mode]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mode === currentDrivePilotMode);
+      });
+    }
+
+    function setModeMessage(message, type = "") {
+      const target = document.getElementById("modeMessage");
+      if (!target) return;
+      target.textContent = message || "";
+      target.className = `mode-message ${type}`.trim();
+    }
+
+    async function changeDrivePilotMode(mode) {
+      if (!["off", "quiet", "radar", "driving"].includes(mode)) {
+        setModeMessage("Invalid mode", "error");
+        return;
+      }
+      setModeMessage("Mode updating...", "");
+      try {
+        const response = await fetch("api/mode", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode }),
+          cache: "no-store"
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload || !payload.ok) {
+          throw new Error((payload && payload.error) || `HTTP ${response.status}`);
+        }
+        updateModeButtons(payload.mode);
+        const displayMode = payload.mode ? payload.mode.charAt(0).toUpperCase() + payload.mode.slice(1) : mode;
+        setModeMessage(`Mode updated: ${displayMode}`, "ok");
+        await refresh();
+      } catch (error) {
+        console.warn("DrivePilot mode switch failed", error && error.message ? error.message : error);
+        setModeMessage("Mode update failed", "error");
+      }
+    }
+
+    function getCurrentArea() {
+      return localStorage.getItem(currentAreaKey) || "";
+    }
+
+    function getObservationStart() {
+      const value = localStorage.getItem(observationStartKey);
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function isObservationActive() {
+      return localStorage.getItem(observationActiveKey) === "true";
+    }
+
+    function getObservationEnd() {
+      if (isObservationActive()) return new Date();
+      const value = localStorage.getItem(observationStopKey);
+      if (!value) return new Date();
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? new Date() : date;
+    }
+
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function topAreasFromPlaces(places) {
+      const zones = new Map();
+      for (const place of places) {
+        const area = getArea(place.address);
+        if (area === "未知") continue;
+        if (!zones.has(area)) zones.set(area, { area, count: 0, high: 0, latestTime: "" });
+        const zone = zones.get(area);
+        zone.count += 1;
+        if (place.confidence === "high") zone.high += 1;
+        if (!zone.latestTime || String(place.timestamp) > String(zone.latestTime)) zone.latestTime = place.timestamp;
+      }
+      return Array.from(zones.values())
+        .map((zone) => ({ ...zone, score: zone.count * 3 + zone.high * 2 }))
+        .sort((a, b) => b.score - a.score || String(b.latestTime).localeCompare(String(a.latestTime)))
+        .slice(0, 3);
+    }
+
+    function normalizeHotZones(hotZones) {
+      const zones = Array.isArray(hotZones && hotZones.zones) ? hotZones.zones : [];
+      return zones
+        .filter((zone) => zone && zone.area && zone.area !== "未知")
+        .map((zone) => ({
+          area: zone.area || "--",
+          count: Number(zone.count_60min || zone.count_30min || zone.count_15min || zone.count || 0),
+          high: Number(zone.high_confidence_count || 0),
+          medium: Number(zone.medium_confidence_count || 0),
+          score: Number(zone.score || 0),
+          latestAddress: zone.latest_address || "--",
+          latestTime: zone.latest_seen_time || ""
+        }))
+        .sort((a, b) => b.score - a.score || b.count - a.count || String(b.latestTime).localeCompare(String(a.latestTime)))
+        .slice(0, 5);
+    }
+
+    function mapsActions(address, place) {
+      const encoded = encodeURIComponent(address || "");
+      const pending = place && locationStatusForPlace(place).badgeClass !== "high" ? `<br><span class="small">${escapeHtml(locationStatusForPlace(place).label)}</span>` : "";
+      return `${pending}<div class="actions"><a href="https://www.google.com/maps/dir/?api=1&destination=${encoded}" target="_blank" rel="noreferrer">導航</a><button type="button" data-copy-address="${escapeHtml(address)}">複製</button></div>`;
+    }
+
+    function badge(value, type = "") {
+      const safe = escapeHtml(value || "");
+      return safe ? `<span class="badge ${escapeHtml(type || safe)}">${safe}</span>` : "";
+    }
+
+    function formatKind(value) {
+      const map = {
+        place: "地址",
+        place_alias: "地標別名",
+        landmark: "地標",
+        start: "開始",
+        end: "結束",
+        description: "待確認",
+        dispatcher_private: "個人提醒"
+      };
+      return map[value] || value || "地址";
+    }
+
+    function formatConfidence(value) {
+      const map = { high: "解析：高", medium: "解析：中", low: "解析：低" };
+      return map[value] || "解析：未知";
+    }
+
+    function locationMatchKey(value) {
+      return String(value || "")
+        .replace(/\u3000/g, " ")
+        .replace(/\s+/g, "")
+        .replace(/[，,。．.、；;：:｜|()（）「」『』【】\[\]{}<>《》"'`~!！?？\-–—_+＝=]/g, "")
+        .trim();
+    }
+
+    function locationKeysForPlace(place) {
+      return [place && place.address, place && place.normalizedAddress, place && place.matchKey, place && place.place, place && place.landmark]
+        .map(locationMatchKey)
+        .filter(Boolean);
+    }
+
+    function isTrustedCoordinateRow(place) {
+      if (!placeHasCoordinate(place)) return false;
+      const source = String(place.source || place._coordSource || "").toLowerCase();
+      return !source.includes("district fallback");
+    }
+
+    function hasKeyInSet(keys, set) {
+      return keys.some((key) => set.has(key));
+    }
+
+    function locationStatusForPlace(place) {
+      const keys = locationKeysForPlace(place);
+      const hasAddress = keys.length > 0;
+      if (!hasAddress || place.kind === "description" || place.kind === "driver_reply") return { label: "定位：未解析", badgeClass: "low" };
+      if (isTrustedCoordinateRow(place) || hasKeyInSet(keys, resolvedLocationKeys)) return { label: "定位：已定位", badgeClass: "high" };
+      if (hasKeyInSet(keys, unresolvedLocationKeys) || hasAddress) return { label: "定位：待補座標", badgeClass: "medium" };
+      return { label: "定位：未解析", badgeClass: "low" };
+    }
+
+    function placeCard(place, extraClass = "") {
+      const area = getArea(place.address);
+      const locationStatus = locationStatusForPlace(place);
+      const stateClass = extraClass || (locationStatus.badgeClass === "high" ? "locatable" : "pending");
+      const details = [
+        place.notificationTime ? `通知時間：${escapeHtml(place.notificationTime)}` : "",
+        place.priceNote ? `低消/價格：${escapeHtml(place.priceNote)}` : "",
+        place.note ? `備註：${escapeHtml(place.note)}` : "",
+        place.text ? `原文：${escapeHtml(place.text)}` : ""
+      ].filter(Boolean).join("<br>");
+      return `<div class="short-card ${stateClass}">
+        <div class="short-title">${escapeHtml(place.address)}</div>
+        <div class="short-meta">${escapeHtml(place.timestamp || "--")}｜${escapeHtml(area)}｜${badge(formatKind(place.kind || "place"), "kind")} ${badge(locationStatus.label, locationStatus.badgeClass)} ${badge(formatConfidence(place.confidence || "low"), place.confidence || "low")}</div>
+        <div class="short-source">來源：${escapeHtml(shortText(place.group || "--", 42))}</div>
+        ${mapsActions(place.address, place)}
+        <details>
+          <summary>詳情</summary>
+          <div class="detail-box">${details || "沒有更多資料"}</div>
+        </details>
+      </div>`;
+    }
+
+    function parsePlaces(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = rows[0] || [];
+      const index = (name) => headers.indexOf(name);
+      const valueFor = (row, names) => {
+        for (const name of names) {
+          const i = index(name);
+          if (i >= 0 && row[i] !== undefined && row[i] !== "") return row[i];
+        }
+        return "";
+      };
+      return rows.slice(1).filter((row) => row.length >= 4).map((row) => ({
+        timestamp: row[index("timestamp")] || "",
+        group: row[index("group")] || "",
+        kind: row[index("kind")] || "",
+        address: row[index("address")] || "",
+        normalizedAddress: valueFor(row, ["normalized_address", "normalizedAddress"]),
+        matchKey: valueFor(row, ["match_key", "matchKey"]),
+        place: valueFor(row, ["place"]),
+        landmark: valueFor(row, ["landmark"]),
+        confidence: row[index("confidence")] || "low",
+        notificationTime: row[index("notification_time")] || "",
+        note: row[index("note")] || "",
+        priceNote: row[index("price_note")] || "",
+        text: row[index("text")] || "",
+        lat: valueFor(row, ["lat", "latitude"]),
+        lng: valueFor(row, ["lng", "lon", "longitude"]),
+        source: valueFor(row, ["source"])
+      })).filter((place) => place.timestamp && place.group && place.address);
+    }
+
+    function parseNotifications(jsonlText) {
+      return jsonlText.trim().split(/\r?\n/).filter(Boolean).map((line) => {
+        try { return JSON.parse(line); } catch (_) { return null; }
+      }).filter(Boolean);
+    }
+
+    function getArea(address) {
+      const match = String(address || "").match(/高雄市([\u4e00-\u9fff]{1,4}區)|^([\u4e00-\u9fff]{1,4}區)/);
+      return match ? (match[1] || match[2]) : "未知";
+    }
+
+    function toNumber(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const n = Number(raw);
+      return Number.isFinite(n) ? n : null;
+    }
+
+    function placeHasCoordinate(place) {
+      const lat = toNumber(place.lat);
+      const lng = toNumber(place.lng);
+      if (lat === null || lng === null) return false;
+      return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    }
+
+    function isValidLatLng(lat, lng) {
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    }
+
+    function normalizeAddressKey(value) {
+      return String(value || "").replace(/\s+/g, "").trim();
+    }
+
+    function addMobileMapPoint(address, lat, lng, note = "", aliases = "") {
+      const keys = [address, note, aliases]
+        .flatMap((value) => String(value || "").split(/[|;；,，\s]+/))
+        .map(normalizeAddressKey)
+        .filter(Boolean);
+      if (!keys.length || !isValidLatLng(lat, lng)) return;
+      const row = { address, lat, lng, note, aliases, keys };
+      mobileMapPointRows.push(row);
+      keys.forEach((key) => {
+        if (!mobileCoordinateIndex.has(key)) mobileCoordinateIndex.set(key, row);
+      });
+    }
+
+    async function loadMobileMapPoints() {
+      if (mobileMapPointsLoaded) return;
+      for (const url of [`data/map_points.csv?t=${Date.now()}`, `../live-data/map_points.csv?t=${Date.now()}`]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const rows = parseCsv(await response.text());
+          const headers = (rows[0] || []).map((header) => String(header || "").trim());
+          const idx = (...names) => {
+            for (const name of names) {
+              const found = headers.findIndex((header) => header.toLowerCase() === String(name).toLowerCase());
+              if (found >= 0) return found;
+            }
+            return -1;
+          };
+          const addressIdx = idx("address", "query", "label");
+          const labelIdx = idx("label", "name");
+          const noteIdx = idx("note", "raw", "alias");
+          const aliasesIdx = idx("aliases", "alias", "keywords");
+          const latIdx = idx("lat", "latitude");
+          const lngIdx = idx("lng", "lon", "longitude");
+          if (latIdx < 0 || lngIdx < 0) continue;
+          rows.slice(1).forEach((row) => {
+            const lat = Number(String(row[latIdx] || "").trim());
+            const lng = Number(String(row[lngIdx] || "").trim());
+            if (!isValidLatLng(lat, lng)) return;
+            const address = addressIdx >= 0 ? String(row[addressIdx] || "").trim() : "";
+            const label = labelIdx >= 0 ? String(row[labelIdx] || "").trim() : "";
+            const note = noteIdx >= 0 ? String(row[noteIdx] || "").trim() : "";
+            const aliases = aliasesIdx >= 0 ? String(row[aliasesIdx] || "").trim() : "";
+            const primary = address || label || note || aliases;
+            if (!primary) return;
+            addMobileMapPoint(primary, lat, lng, note || label || address, [address, label, note, aliases].join(" "));
+            mobileMapPointLoadedCount += 1;
+          });
+          break;
+        } catch (error) {
+          console.warn("map_points.csv unavailable", error);
+        }
+      }
+      mobileMapStats.mapPointsLoaded = mobileMapPointLoadedCount;
+      console.log("[DrivePilot Map] map_points loaded: " + mobileMapStats.mapPointsLoaded);
+      mobileMapPointsLoaded = true;
+    }
+
+    function findMobileMapPointMatch(place) {
+      const candidates = [place.address, place.note, place.text]
+        .map(normalizeAddressKey)
+        .filter(Boolean);
+      for (const candidate of candidates) {
+        if (mobileCoordinateIndex.has(candidate)) return mobileCoordinateIndex.get(candidate);
+      }
+      for (const row of mobileMapPointRows) {
+        const rowKeys = row.keys || [row.address, row.note, row.aliases].map(normalizeAddressKey).filter(Boolean);
+        for (const candidate of candidates) {
+          for (const key of rowKeys) {
+            if (key && (candidate.includes(key) || key.includes(candidate))) return row;
+          }
+        }
+      }
+      return null;
+    }
+
+    function getAreaFromPlace(place) {
+      return getArea([place.address, place.note, place.text].filter(Boolean).join(" "));
+    }
+
+    function resolveMobileLatLng(place, index) {
+      const lat = toNumber(place.lat);
+      const lng = toNumber(place.lng);
+      if (isValidLatLng(lat, lng)) return { lat, lng, source: "places.csv" };
+      const mapPoint = findMobileMapPointMatch(place);
+      if (mapPoint && isValidLatLng(mapPoint.lat, mapPoint.lng)) return { lat: mapPoint.lat, lng: mapPoint.lng, source: "map_points" };
+      const area = getAreaFromPlace(place);
+      const center = kaohsiungDistrictCenters[area];
+      if (center) {
+        const offset = (index % 9) - 4;
+        return { lat: center[0] + offset * 0.0012, lng: center[1] + offset * 0.0012, source: "district fallback", area };
+      }
+      return { lat: NaN, lng: NaN, source: "none" };
+    }
+
+    function parseResolvedPointRows(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = (rows[0] || []).map((header) => String(header || "").trim());
+      const index = (name) => headers.indexOf(name);
+      const valueFor = (row, names) => {
+        for (const name of names) {
+          const i = index(name);
+          if (i >= 0 && row[i] !== undefined && row[i] !== "") return row[i];
+        }
+        return "";
+      };
+      return rows.slice(1).filter((row) => row.length >= 6).map((row) => ({
+        timestamp: valueFor(row, ["time", "timestamp", "last_seen", "updated_at"]),
+        lastSeen: valueFor(row, ["last_seen"]),
+        group: index("group") >= 0 ? row[index("group")] : "",
+        address: index("address") >= 0 ? row[index("address")] : "",
+        normalizedAddress: index("normalized_address") >= 0 ? row[index("normalized_address")] : "",
+        matchKey: valueFor(row, ["match_key", "matchKey"]),
+        lat: index("lat") >= 0 ? row[index("lat")] : "",
+        lng: index("lng") >= 0 ? row[index("lng")] : "",
+        source: index("source") >= 0 ? row[index("source")] : "map_points",
+        count: valueFor(row, ["count"]) || "1",
+        confidence: index("confidence") >= 0 ? row[index("confidence")] : "medium",
+        kind: index("kind") >= 0 ? row[index("kind")] : "place",
+        text: index("text_summary") >= 0 ? row[index("text_summary")] : ""
+      })).filter((place) => place.address && isValidLatLng(toNumber(place.lat), toNumber(place.lng)));
+    }
+
+    function buildResolvedLocationKeySet(csvText) {
+      const rows = parseResolvedPointRows(csvText);
+      const next = new Set();
+      rows.forEach((row) => locationKeysForPlace(row).forEach((key) => next.add(key)));
+      return next;
+    }
+
+    function buildUnresolvedLocationKeySet(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = (rows[0] || []).map((header) => String(header || "").trim());
+      const index = (name) => headers.indexOf(name);
+      const valueFor = (row, names) => {
+        for (const name of names) {
+          const i = index(name);
+          if (i >= 0 && row[i] !== undefined && row[i] !== "") return row[i];
+        }
+        return "";
+      };
+      const next = new Set();
+      rows.slice(1).forEach((row) => {
+        [valueFor(row, ["raw_address"]), valueFor(row, ["normalized_address"]), valueFor(row, ["match_key"])]
+          .map(locationMatchKey)
+          .filter(Boolean)
+          .forEach((key) => next.add(key));
+      });
+      return next;
+    }
+
+    async function loadMarkerPointsForMiniMap() {
+      for (const url of [`data/map_points.csv?t=${Date.now()}`, `../live-data/map_points.csv?t=${Date.now()}`]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          return parseResolvedPointRows(await response.text());
+        } catch (_) {}
+      }
+      return [];
+    }
+
+    async function loadMiniMapUnresolvedCount() {
+      for (const url of [`data/unresolved_addresses.csv?t=${Date.now()}`, `../live-data/unresolved_addresses.csv?t=${Date.now()}`]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (!response.ok) continue;
+          const rows = parseCsv(await response.text());
+          return Math.max(0, rows.length - 1);
+        } catch (_) {}
+      }
+      return 0;
+    }
+
+    async function renderMiniMap(allPlaces) {
+      const mapEl = document.getElementById("miniMap");
+      const statusEl = document.getElementById("miniMapStatus");
+      const popupEl = document.getElementById("miniMapPopup");
+      if (!mapEl || !statusEl || !popupEl) return;
+      popupEl.hidden = true;
+      popupEl.innerHTML = "";
+      try {
+        if (!window.L) {
+          console.warn("[DrivePilot Map] Leaflet failed to load");
+          statusEl.textContent = "地圖暫時無法顯示";
+          mapEl.innerHTML = `<div class="mini-map-empty">小地圖讀取失敗，不影響其他資訊</div>`;
+          return;
+        }
+        if (!miniMapInstance) {
+          console.log("[DrivePilot Map] Leaflet loaded");
+          miniMapInstance = L.map("miniMap", { zoomControl: false, attributionControl: true }).setView([22.64, 120.32], 12);
+          miniMapLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            detectRetina: true,
+            attribution: "© OpenStreetMap"
+          });
+          miniMapLayer.on("tileerror", (event) => console.warn("[DrivePilot Map] tile load failed", event && event.tile && event.tile.src ? event.tile.src : event));
+          miniMapLayer.addTo(miniMapInstance);
+          miniMarkerLayer = L.layerGroup().addTo(miniMapInstance);
+          console.log("[DrivePilot Map] tile layer added");
+          setTimeout(() => {
+            miniMapInstance.invalidateSize();
+            const rect = mapEl.getBoundingClientRect();
+            console.log("[DrivePilot Map] map container size: " + Math.round(rect.width) + " x " + Math.round(rect.height));
+          }, 120);
+        }
+        const resolvedRows = await loadMarkerPointsForMiniMap();
+        const unresolvedCount = await loadMiniMapUnresolvedCount();
+        mobileMapStats.rowsLoaded = resolvedRows.length;
+        mobileMapStats.sourcePlaces = 0;
+        mobileMapStats.sourceMapPoints = 0;
+        mobileMapStats.sourceDistrict = 0;
+        mobileMapStats.skippedNoLocation = 0;
+        mobileMapStats.sourceCache = 0;
+        mobileMapStats.unresolvedCount = unresolvedCount;
+        const filteredRows = resolvedRows.filter((place) => withinWindow(place.timestamp || place.lastSeen));
+        latestMiniMapPlaces = filteredRows
+          .map((place) => {
+            const lat = toNumber(place.lat);
+            const lng = toNumber(place.lng);
+            if (!isValidLatLng(lat, lng)) {
+              mobileMapStats.skippedNoLocation += 1;
+              return null;
+            }
+            mobileMapStats.sourceMapPoints += 1;
+            return {
+              ...place,
+              _lat: lat,
+              _lng: lng,
+              _coordSource: "map_points",
+              _latLngText: `${lat.toFixed(6)}, ${lng.toFixed(6)}`
+            };
+          })
+          .filter(Boolean);
+
+        statusEl.textContent = `${windowLabel()} · ${latestMiniMapPlaces.length} 已定位`;
+        miniMarkerLayer.clearLayers();
+        if (!latestMiniMapPlaces.length) {
+          if (!mapEl.querySelector(".mini-map-empty")) {
+            const empty = document.createElement("div");
+            empty.className = "mini-map-empty";
+            empty.textContent = `${windowLabel()}無精準座標`;
+            mapEl.appendChild(empty);
+          }
+          miniMapInstance.setView([22.64, 120.32], 12);
+          miniMapInstance.invalidateSize();
+          console.log("[DrivePilot Map] rows loaded: " + mobileMapStats.rowsLoaded);
+          console.log("[DrivePilot Map] resolved markers: 0");
+          console.log("[DrivePilot Map] source map_points: " + mobileMapStats.sourceMapPoints);
+          console.log("[DrivePilot Map] source address_geocode_cache: " + mobileMapStats.sourceCache);
+          console.log("[DrivePilot Map] unresolved count: " + mobileMapStats.unresolvedCount);
+          return;
+        }
+        mapEl.querySelector(".mini-map-empty")?.remove();
+        const bounds = [];
+        latestMiniMapPlaces.forEach((place, index) => {
+          const lat = toNumber(place._lat);
+          const lng = toNumber(place._lng);
+          if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+          const color = place.confidence === "medium" ? "#d38b2f" : place.confidence === "low" ? "#9aa3af" : "#3fb378";
+          const marker = L.circleMarker([lat, lng], {
+            radius: 5,
+            color: "rgba(255,255,255,.78)",
+            weight: 2,
+            fillColor: color,
+            fillOpacity: 0.9
+          }).addTo(miniMarkerLayer);
+          marker.bindPopup(`${escapeHtml(place.address || "--")}<br>時間：${escapeHtml(place.timestamp || place.lastSeen || "--")}<br>來源：${escapeHtml(place.source || "map_points")}<br>Count：${escapeHtml(place.count || "1")}`);
+          marker.on("click", () => showMiniMapPopup(index));
+          bounds.push([lat, lng]);
+        });
+        if (bounds.length) miniMapInstance.fitBounds(bounds, { padding: [22, 22], maxZoom: 15 });
+        miniMapInstance.invalidateSize();
+        console.log("[DrivePilot Map] rows loaded: " + mobileMapStats.rowsLoaded);
+        console.log("[DrivePilot Map] resolved markers: " + latestMiniMapPlaces.length);
+        console.log("[DrivePilot Map] source map_points: " + mobileMapStats.sourceMapPoints);
+        console.log("[DrivePilot Map] source address_geocode_cache: " + mobileMapStats.sourceCache);
+        console.log("[DrivePilot Map] unresolved count: " + mobileMapStats.unresolvedCount);
+      } catch (error) {
+        console.warn("DrivePilot mini map render failed", error && error.message ? error.message : error);
+        statusEl.textContent = "地圖暫時無法顯示";
+        if (!miniMapInstance) mapEl.innerHTML = `<div class="mini-map-empty">小地圖讀取失敗，不影響其他資訊</div>`;
+      }
+    }
+
+    function showMiniMapPopup(index) {
+      const popupEl = document.getElementById("miniMapPopup");
+      const place = latestMiniMapPlaces[index];
+      if (!popupEl || !place) return;
+      popupEl.hidden = false;
+      popupEl.innerHTML = `
+        <strong>${escapeHtml(place.address || "--")}</strong><br>
+        時間：${escapeHtml(place.timestamp || place.lastSeen || "--")}<br>
+        來源：${escapeHtml(place.source || "map_points")}<br>
+        Count：${escapeHtml(place.count || "1")}<br>
+        ${badge(formatConfidence(place.confidence || "medium"), place.confidence || "medium")}<br>
+        ${badge("定位：已定位", "high")}<br>
+        定位來源：${escapeHtml(place._coordSource || "map_points")}
+      `;
+    }
+
+    function renderRecent(target, items, formatter) {
+      const latest = items.slice(-5).reverse();
+      document.getElementById(target).innerHTML = latest.length ? latest.map((item) => formatter(item)).join("") : `<div class="empty">目前範圍內沒有資料</div>`;
+    }
+
+    function renderHotZones(places) {
+      const zones = new Map();
+      for (const place of places) {
+        const area = getArea(place.address);
+        if (!zones.has(area)) zones.set(area, { area, count: 0, high: 0, medium: 0, latestAddress: "", latestTime: "" });
+        const zone = zones.get(area);
+        zone.count += 1;
+        if (place.confidence === "high") zone.high += 1;
+        if (place.confidence === "medium") zone.medium += 1;
+        if (!zone.latestTime || String(place.timestamp) > String(zone.latestTime)) {
+          zone.latestTime = place.timestamp;
+          zone.latestAddress = place.address;
+        }
+      }
+      const ranked = Array.from(zones.values())
+        .filter((zone) => zone.area !== "未知")
+        .map((zone) => ({ ...zone, score: zone.count * 3 + zone.high * 2 + zone.medium }))
+        .sort((a, b) => b.score - a.score || String(b.latestTime).localeCompare(String(a.latestTime)))
+        .slice(0, 3);
+      document.getElementById("hotZoneStatus").textContent = `${windowLabel()} · ${ranked.length} 區 · ${new Date().toLocaleTimeString()}`;
+      document.getElementById("marketSummary").innerHTML = ranked.length
+        ? ranked.map((zone, index) => `<div class="rank-row"><div class="rank-no">${index + 1}</div><div class="rank-main"><div class="rank-name">${escapeHtml(zone.area)}</div><div class="rank-sub">${escapeHtml(zone.count)} 件</div></div><div>${badge(String(zone.count || 0), "kind")}</div></div>`).join("")
+        : `<div class="empty">目前熱區不足，仍需觀察</div>`;
+      return ranked;
+    }
+
+    function renderHeader(statusConfig) {
+      if (!statusConfig) {
+        console.warn("DrivePilot status file is not available.");
+        document.getElementById("modeBadge").textContent = "模式：--";
+        updateModeButtons("--");
+        document.getElementById("headerStatus").innerHTML = `
+          <div class="status-chip status-warn"><strong>--</strong><span>系統狀態</span></div>
+          <div class="status-chip"><strong>--</strong><span>最後通知</span></div>
+        `;
+        return { mode: "--", systemStatus: "--", latestTime: "" };
+      }
+      const mode = statusConfig.mode || "--";
+      const systemStatus = statusConfig.health_status || "unknown";
+      const latestTime = statusConfig.last_notification_time || "";
+      document.getElementById("modeBadge").textContent = `模式：${mode}`;
+      updateModeButtons(mode);
+      document.getElementById("headerStatus").innerHTML = `
+        <div class="status-chip ${statusClass(systemStatus)}"><strong>${escapeHtml(systemStatus)}</strong><span>系統狀態</span></div>
+        <div class="status-chip"><strong>${escapeHtml(relativeTime(latestTime))}</strong><span>最後通知</span></div>
+      `;
+      return { mode, systemStatus, latestTime };
+    }
+
+    async function analyzeNow() {
+      const resultEl = document.getElementById("analysisResult");
+      const button = document.getElementById("analyzeNow");
+      if (!resultEl || !button) return;
+      button.disabled = true;
+      resultEl.innerHTML = `<div class="small">分析中...</div>`;
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 7000);
+        const response = await fetch(`api/analyze?t=${Date.now()}`, { cache: "no-store", signal: controller.signal });
+        clearTimeout(timeout);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        if (!payload || payload.ok === false) throw new Error((payload && payload.error) || "analysis_failed");
+        renderAnalysis(payload);
+      } catch (error) {
+        console.warn("DrivePilot analyze failed", error && error.message ? error.message : error);
+        resultEl.innerHTML = `<h3>系統狀態：未知</h3><div class="small">一鍵分析暫時無法讀取資料，請確認 8790 服務。</div>`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function renderAnalysis(data) {
+      const resultEl = document.getElementById("analysisResult");
+      if (!resultEl) return;
+      const hotAreas = Array.isArray(data.hot_areas_top3) ? data.hot_areas_top3 : [];
+      const groups = Array.isArray(data.active_groups_top3) ? data.active_groups_top3 : [];
+      const highValues = Array.isArray(data.high_value_recent5) ? data.high_value_recent5 : [];
+      const listRows = (items, formatter, emptyText) => {
+        if (!items.length) return `<div class="small">${escapeHtml(emptyText)}</div>`;
+        return `<ul class="analysis-list">${items.map(formatter).join("")}</ul>`;
+      };
+      resultEl.innerHTML = `
+        <h3>${escapeHtml(data.market_status || "觀察中")}</h3>
+        <div class="small">系統狀態：${escapeHtml(data.system_status || "未知")} / 最近 60 分鐘：${escapeHtml(data.total_recent_notifications || 0)} 筆 / 最後通知：${escapeHtml(data.last_notification_time || "--")}</div>
+        <div class="analysis-section">
+          <div class="analysis-title">熱區 Top 3</div>
+          ${listRows(hotAreas, (item, index) => `<li>${index + 1}. ${escapeHtml(item.name || "--")} · ${escapeHtml(item.count || 0)} 筆</li>`, "目前沒有足夠熱區資料")}
+        </div>
+        <div class="analysis-section">
+          <div class="analysis-title">群組活躍 Top 3</div>
+          ${listRows(groups, (item, index) => `<li>${index + 1}. ${escapeHtml(shortText(item.name || "--", 34))} · ${escapeHtml(item.count || 0)} 筆</li>`, "目前沒有足夠群組資料")}
+        </div>
+        <div class="analysis-section">
+          <div class="analysis-title">個人提醒數</div>
+          <div>${escapeHtml(data.dispatcher_private_count || 0)} 筆</div>
+        </div>
+        <div class="analysis-section">
+          <div class="analysis-title">高價值訊號最近 5 筆</div>
+          ${listRows(highValues, (item) => `<li>${badge(item.type || "--", item.type === "熱區" ? "medium" : "kind")} ${escapeHtml(item.time || "--")}<br>${escapeHtml(shortText(item.source || "--", 34))}<br>${escapeHtml(shortText(item.place || "--", 56))}</li>`, "最近 60 分鐘沒有個人提醒或熱區訊號")}
+        </div>
+      `;
+    }
+
+    function renderTodayOverview(notifications, places, ranked) {
+      const highCount = places.filter((place) => place.confidence === "high").length;
+      const dispatcherCount = notifications.filter(hasDispatcherPrivate).length;
+      const hotzoneCount = ranked ? ranked.reduce((sum, zone) => sum + Number(zone.count || 0), 0) : 0;
+      const marketUpdatedAt = (document.getElementById("marketDataUpdatedAt") || {}).textContent || "--";
+      const markerUpdatedAt = (document.getElementById("markerUpdatedAt") || {}).textContent || "--";
+      const markerCount = (document.getElementById("markerCount") || {}).textContent || "--";
+      document.getElementById("todayOverview").innerHTML = `
+        <div class="metric"><strong>${notifications.length}</strong><span>60 分鐘訊號</span></div>
+        <div class="metric"><strong>${places.length}</strong><span>解析地址</span></div>
+        <div class="metric"><strong>${hotzoneCount || 0}</strong><span>熱區事件</span></div>
+        <div class="metric"><strong>${dispatcherCount}</strong><span>個人提醒</span></div>
+        <div class="metric"><strong id="marketDataUpdatedAt">${escapeHtml(marketUpdatedAt)}</strong><span>24HR 最後更新</span></div>
+        <div class="metric"><strong id="markerUpdatedAt">${escapeHtml(markerUpdatedAt)}</strong><span>Marker 最後更新</span></div>
+        <div class="metric"><strong id="markerCount">${escapeHtml(markerCount)}</strong><span>Marker 數量</span></div>
+      `;
+    }
+
+    function renderRadarState(recent30Places, recent30Notifications, healthInfo, ranked30) {
+      const highCount = recent30Places.filter((place) => place.confidence === "high").length;
+      const dispatcherCount = recent30Notifications.filter(hasDispatcherPrivate).length;
+      const hotzoneActive = ranked30.length > 0 && ranked30[0].count >= 2;
+      let state = "觀察中";
+      let note = "最近 30 分鐘訊號偏少，先看市場變化。";
+      if (healthInfo.systemStatus === "alert" || healthInfo.systemStatus === "unknown" || healthInfo.systemStatus === "--") {
+        state = "系統注意";
+        note = "最後通知時間偏久，請確認 MacroDroid、手機網路與 8788。";
+      } else if (dispatcherCount > 0) {
+        state = "有高價值訊號";
+        note = `最近 30 分鐘有 ${dispatcherCount} 筆個人提醒。`;
+      } else if (highCount >= 2 || hotzoneActive) {
+        state = "市場活躍";
+        note = `最近 30 分鐘解析高訊號 ${highCount} 筆，市場可持續觀察。`;
+      }
+      document.getElementById("radarState").innerHTML = `
+        <div class="market-topline">
+          <div>
+            <div class="market-status">${escapeHtml(state)}</div>
+            <div class="market-note">${escapeHtml(note)}</div>
+          </div>
+          ${dispatcherCount ? badge("個人提醒", "kind") : ""}
+        </div>
+      `;
+    }
+
+    function renderValueSignals(notifications, places, ranked) {
+      const signals = [];
+      for (const item of notifications) {
+        if (!hasDispatcherPrivate(item)) continue;
+        signals.push({
+          priority: 1,
+          time: getNotificationTimestamp(item),
+          label: "個人提醒",
+          badgeClass: "kind",
+          title: item.group || item.title || "--",
+          summary: getNotificationText(item) || "--",
+          confidence: ""
+        });
+      }
+      for (const zone of ranked || []) {
+        signals.push({
+          priority: 3,
+          time: zone.latestTime || "",
+          label: "熱區",
+          badgeClass: "medium",
+          title: zone.area || "--",
+          summary: zone.latestAddress || "--",
+          confidence: ""
+        });
+      }
+      const latest = signals
+        .sort((a, b) => a.priority - b.priority || String(b.time).localeCompare(String(a.time)))
+        .slice(0, 5);
+      document.getElementById("valueSignals").innerHTML = latest.length ? latest.map((signal) => `
+        <div class="signal-card">
+          <div class="signal-head">
+            ${badge(signal.label, signal.badgeClass)}
+            <span class="small">${escapeHtml(relativeTime(signal.time))}</span>
+          </div>
+          <div class="signal-title">${escapeHtml(signal.title || "--")}</div>
+          <div class="signal-meta">${escapeHtml(signal.time || "--")}${signal.confidence ? ` / ${escapeHtml(formatConfidence(signal.confidence))}` : ""}</div>
+          <div class="signal-summary">${escapeHtml(signal.summary || "--")}</div>
+        </div>
+      `).join("") : `<div class="empty">最近沒有個人提醒或熱區訊號</div>`;
+    }
+
+    function renderAreaRanking(ranked) {
+      const known = (ranked || []).filter((zone) => zone && zone.area && zone.area !== "未知");
+      const unknown = (ranked || []).filter((zone) => zone && zone.area === "未知");
+      const top = known.concat(unknown).slice(0, 5);
+      document.getElementById("areaRanking").innerHTML = top.length ? top.map((zone, index) => `
+        <div class="rank-row">
+          <div class="rank-no">${index + 1}</div>
+          <div class="rank-main">
+            <div class="rank-name">${escapeHtml(zone.area === "未知" ? "未分類" : (zone.area || "--"))}</div>
+            <div class="rank-sub">${escapeHtml(zone.count || 0)} 件</div>
+          </div>
+          <div>${badge(String(zone.count || 0), "kind")}</div>
+        </div>
+      `).join("") : `<div class="empty">目前沒有足夠區域資料</div>`;
+    }
+
+    function marketHeat(places) {
+      const recent15 = places.filter((place) => {
+        const date = parseTimestamp(place.timestamp);
+        return date && ((new Date()) - date <= 15 * 60 * 1000);
+      }).length;
+      if (recent15 >= 5) return "熱";
+      if (recent15 >= 2) return "普通";
+      return "冷";
+    }
+
+    function renderTopStatus(places, ranked) {
+      const target = document.getElementById("topStatus");
+      if (!target) return;
+      const heat = marketHeat(places);
+      const system = places.length || ranked.length ? "正常" : "需檢查";
+      target.innerHTML = `
+        <div class="pill"><strong>${escapeHtml(heat)}</strong><br><span class="small">市場熱度</span></div>
+        <div class="pill"><strong>${escapeHtml(windowLabel())}</strong><br><span class="small">目前範圍</span></div>
+        <div class="pill"><strong>${escapeHtml(new Date().toLocaleTimeString())}</strong><br><span class="small">最後更新</span></div>
+        <div class="pill"><strong>${escapeHtml(system)}</strong><br><span class="small">系統狀態</span></div>
+      `;
+    }
+
+    function renderLocationAdvice(ranked) {
+      const currentArea = getCurrentArea();
+      const areaText = currentArea || "其他 / 未設定";
+      const topAreas = ranked.map((zone) => zone.area);
+      const topText = topAreas.length ? topAreas.join("、") : "目前熱區尚未形成";
+      let advice = "保持觀察，不做強制出車判斷。";
+      if (!currentArea) {
+        advice = "設定目前位置後，可顯示與熱區的距離感。";
+      } else if (topAreas.includes(currentArea)) {
+        advice = `目前位置位於熱區 ${currentArea}，可持續觀察。`;
+      } else if (topAreas.length) {
+        const nearby = topAreas.slice(0, 2).join(" / ");
+        advice = `目前位置與熱區不同，可留意 ${nearby} 的市場變化。`;
+      }
+      document.getElementById("locationAdvice").innerHTML = [
+        `目前位置：<strong>${escapeHtml(areaText)}</strong>`,
+        `最近熱區：${escapeHtml(topText)}`,
+        `建議：${escapeHtml(advice)}`
+      ].join("<br>");
+    }
+
+    function observationAdvice(total, highCount, topAreas, currentArea) {
+      let advice = "";
+      if (total === 0) advice = "建議下線或換區觀察。";
+      else if (total <= 2) advice = "市場普通，可短跑觀察。";
+      else advice = "可繼續上線觀察。";
+      if (highCount >= 2) advice += " 解析高訊號較多，可持續觀察熱區。";
+      if (currentArea && topAreas.length && topAreas[0].area !== currentArea) {
+        advice += ` 目前位置與熱區不同，可留意 ${topAreas[0].area}。`;
+      }
+      return advice;
+    }
+
+    function renderObservation(allPlaces) {
+      const start = getObservationStart();
+      const active = isObservationActive();
+      const statusEl = document.getElementById("observationStatus");
+      const summaryEl = document.getElementById("observationSummary");
+      if (!start) {
+        statusEl.textContent = "尚未開始觀察";
+        summaryEl.textContent = "按下開始觀察後，DrivePilot 會用目前時間之後的地址資料做 15 分鐘市場觀察。";
+        return;
+      }
+      const observationPlaces = allPlaces.filter((place) => {
+        const date = parseTimestamp(place.timestamp);
+        return date && date >= start && date <= getObservationEnd() && place.kind !== "description";
+      });
+      const highPlaces = observationPlaces.filter((place) => place.confidence === "high");
+      const topAreas = topAreasFromPlaces(observationPlaces);
+      const latest = observationPlaces.slice().sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)))[0];
+      const elapsed = formatDuration(getObservationEnd() - start);
+      const topText = topAreas.length ? topAreas.map((zone) => `${zone.area} ${zone.count}筆`).join("、") : "尚未形成熱區";
+      const currentArea = getCurrentArea();
+      statusEl.textContent = `${active ? "觀察中" : "已停止"} / 開始：${start.toLocaleString()} / 已觀察：${elapsed}`;
+      summaryEl.innerHTML = [
+        `目前觀察時間：<strong>${escapeHtml(elapsed)}</strong>`,
+        `觀察期間有效地址數：${observationPlaces.length}`,
+        `解析高訊號數：${highPlaces.length}`,
+        `觀察期間目前熱區：${escapeHtml(topText)}`,
+        `最新地址時間：${latest ? escapeHtml(latest.timestamp) : "尚無"}`,
+        `初步建議：${escapeHtml(observationAdvice(observationPlaces.length, highPlaces.length, topAreas, currentArea))}`
+      ].join("<br>");
+    }
+
+    async function refresh() {
+      if (refreshInFlight) {
+        console.warn("DrivePilot mobile refresh skipped: previous refresh still running.");
+        return;
+      }
+      refreshInFlight = true;
+      try {
+        const [notificationsText, placesText, statusText, hotZonesText, resolvedPointsText, unresolvedText] = await Promise.all([
+          loadText("data/notifications.jsonl"),
+          loadText("data/places.csv"),
+          loadOptionalText(["live-data/drivepilot_status.json", "data/drivepilot_status.json"]),
+          loadText("data/hot_zones.json"),
+          loadOptionalText(["data/map_resolved_points.csv", "../live-data/map_resolved_points.csv"]),
+          loadOptionalText(["data/unresolved_addresses.csv", "../live-data/unresolved_addresses.csv"])
+        ]);
+        const allNotifications = parseNotifications(notificationsText);
+        const statusConfig = parseJsonSafe(statusText, null);
+        const hotZones = parseJsonSafe(hotZonesText, null);
+        resolvedLocationKeys = buildResolvedLocationKeySet(resolvedPointsText);
+        unresolvedLocationKeys = buildUnresolvedLocationKeySet(unresolvedText);
+        const notifications = allNotifications.filter((item) => withinWindow(getNotificationTimestamp(item)));
+        const allPlaces = parsePlaces(placesText);
+        const places = allPlaces.filter((place) => withinWindow(place.timestamp));
+        const recent30Places = allPlaces.filter((place) => {
+          const date = parseTimestamp(place.timestamp);
+          return date && Date.now() - date.getTime() <= 30 * 60 * 1000;
+        });
+        const recent30Notifications = allNotifications.filter((item) => {
+          const date = parseTimestamp(getNotificationTimestamp(item));
+          return date && Date.now() - date.getTime() <= 30 * 60 * 1000;
+        });
+
+        document.getElementById("filterStatus").textContent = `${windowLabel()} · ${new Date().toLocaleTimeString()}`;
+        document.getElementById("notificationStatus").textContent = `${windowLabel()} · ${notifications.length} 筆`;
+        document.getElementById("placeStatus").textContent = `${windowLabel()} · ${places.length} 筆`;
+
+        renderRecent("recentNotifications", notifications, (item) => {
+          const labels = [];
+          if (hasDispatcherPrivate(item)) labels.push(badge("個人提醒", "kind"));
+          if (isHotzone(item)) labels.push(badge("熱區", "medium"));
+          const kindLabel = labels.join(" ") || badge("一般", "low");
+          const source = item.group || item.title || item.source || item.sender || "--";
+          const text = getNotificationText(item);
+          return `<details class="feed-row">
+            <summary class="feed-row-main">
+              <div class="feed-row-title">${escapeHtml(relativeTime(getNotificationTimestamp(item)))}｜${escapeHtml(shortText(source, 24))}</div>
+              <div class="feed-row-sub">${escapeHtml(shortText(text, 46))}</div>
+            </summary>
+            <div class="detail-box">${kindLabel}<br>${escapeHtml(getNotificationTimestamp(item) || "")}<br>${escapeHtml(text || "--")}</div>
+          </details>`;
+        });
+        renderRecent("recentPlaces", places, (place) => placeCard(place));
+        const ranked = renderHotZones(places);
+        const dashboardRanked = normalizeHotZones(hotZones);
+        const rankingSource = dashboardRanked.length ? dashboardRanked : ranked;
+        const ranked30 = topAreasFromPlaces(recent30Places).map((zone) => ({ ...zone, latestAddress: "" }));
+        const healthInfo = renderHeader(statusConfig);
+        renderTodayOverview(notifications, places, rankingSource);
+        renderRadarState(recent30Places, recent30Notifications, healthInfo, ranked30);
+        renderValueSignals(notifications, places, rankingSource);
+        renderAreaRanking(rankingSource);
+        await renderMiniMap(allPlaces);
+        renderLocationAdvice(rankingSource);
+        renderObservation(allPlaces);
+        const high = places.filter((place) => place.confidence === "high" && place.kind !== "description" && place.kind !== "driver_reply");
+        const pending = places.filter((place) => locationStatusForPlace(place).badgeClass !== "high");
+        document.getElementById("highConfidencePlaces").innerHTML = high.length ? high.slice(-3).reverse().map((place) => placeCard(place, "high")).join("") : "目前範圍內沒有資料";
+        document.getElementById("pendingPlaces").innerHTML = pending.length ? pending.slice(-3).reverse().map((place) => placeCard(place, "pending")).join("") : "目前範圍內沒有資料";
+      } catch (error) {
+        console.warn("DrivePilot mobile refresh failed", error && error.message ? error.message : error);
+        renderHeader(null);
+        document.getElementById("todayOverview").innerHTML = `
+          <div class="metric"><strong>--</strong><span>今日通知數</span></div>
+          <div class="metric"><strong>--</strong><span>解析地址</span></div>
+          <div class="metric"><strong>--</strong><span>熱區事件</span></div>
+          <div class="metric"><strong>--</strong><span>個人提醒</span></div>
+          <div class="metric"><strong id="marketDataUpdatedAt">--</strong><span>24HR 最後更新</span></div>
+          <div class="metric"><strong id="markerUpdatedAt">--</strong><span>Marker 最後更新</span></div>
+          <div class="metric"><strong id="markerCount">--</strong><span>Marker 數量</span></div>
+        `;
+        document.getElementById("radarState").innerHTML = `<div class="radar-state">系統注意</div><div class="radar-note">資料讀取失敗，請確認 8790 服務。</div>`;
+        document.getElementById("valueSignals").textContent = "資料暫時無法讀取";
+        document.getElementById("areaRanking").textContent = "資料暫時無法讀取";
+        await renderMiniMap([]);
+        document.getElementById("recentNotifications").textContent = "資料暫時無法讀取";
+        document.getElementById("marketSummary").textContent = "資料暫時無法讀取";
+        document.getElementById("recentPlaces").textContent = "資料暫時無法讀取";
+      } finally {
+        refreshInFlight = false;
+      }
+    }
+
+    document.getElementById("currentArea").value = getCurrentArea();
+    refresh();
+    loadMarketReport();
+    loadSignalStats24h();
+    loadMarkerHealth();
+    document.getElementById("refreshNow").addEventListener("click", () => {
+      refresh();
+      loadMarketReport();
+      loadSignalStats24h();
+      loadMarkerHealth();
+    });
+    document.getElementById("analyzeNow").addEventListener("click", analyzeNow);
+    document.getElementById("modeSwitch").addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-mode]");
+      if (!button) return;
+      if (button.dataset.mode === currentDrivePilotMode) return;
+      changeDrivePilotMode(button.dataset.mode);
+    });
+    document.getElementById("miniMap").addEventListener("click", (event) => {
+      const marker = event.target.closest("[data-mini-index]");
+      if (!marker) return;
+      showMiniMapPopup(Number(marker.dataset.miniIndex));
+    });
+    document.getElementById("currentArea").addEventListener("change", (event) => {
+      localStorage.setItem(currentAreaKey, event.target.value);
+      refresh();
+      loadMarketReport();
+      loadSignalStats24h();
+      loadMarkerHealth();
+    });
+    document.getElementById("startObservation").addEventListener("click", () => {
+      localStorage.setItem(observationStartKey, new Date().toISOString());
+      localStorage.removeItem(observationStopKey);
+      localStorage.setItem(observationActiveKey, "true");
+      refresh();
+      loadMarketReport();
+      loadSignalStats24h();
+      loadMarkerHealth();
+    });
+    document.getElementById("stopObservation").addEventListener("click", () => {
+      localStorage.setItem(observationStopKey, new Date().toISOString());
+      localStorage.setItem(observationActiveKey, "false");
+      refresh();
+      loadMarketReport();
+      loadSignalStats24h();
+      loadMarkerHealth();
+    });
+    document.getElementById("resetObservation").addEventListener("click", () => {
+      localStorage.removeItem(observationStartKey);
+      localStorage.removeItem(observationStopKey);
+      localStorage.removeItem(observationActiveKey);
+      refresh();
+      loadSignalStats24h();
+    });
+    document.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-copy-address]");
+      if (!button) return;
+      try {
+        await navigator.clipboard.writeText(button.getAttribute("data-copy-address") || "");
+        button.textContent = "已複製";
+      } catch (_) {
+        button.textContent = "複製失敗";
+      }
+    });
+    document.getElementById("timeWindow").addEventListener("change", refresh);
+    setInterval(refresh, 15000);
+    setInterval(loadMarketReport, 60000);
+    setInterval(loadSignalStats24h, 60000);
+    setInterval(loadMarkerHealth, 60000);
+  </script>
+</body>
+</html>
+

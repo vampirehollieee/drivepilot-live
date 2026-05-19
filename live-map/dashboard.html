@@ -1,0 +1,1528 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DrivePilot Live 桌面戰情室</title>
+  <style>
+    :root {
+      --bg: #202123;
+      --panel: rgba(42, 43, 47, .92);
+      --panel-soft: rgba(47, 48, 53, .9);
+      --line: rgba(255, 255, 255, .08);
+      --line-soft: rgba(255, 255, 255, .055);
+      --text: #f1f1f1;
+      --muted: #b8bcc5;
+      --muted-2: #8d929c;
+      --accent: #8ea3bd;
+      --blue: #4f8ecb;
+      --green: #3fb378;
+      --orange: #d38b2f;
+      --red: #d45757;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --shadow-card: 0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.045), inset 0 -1px 0 rgba(255,255,255,.015);
+      --sidebar-w: clamp(168px, 11.5vw, 220px);
+      --right-rail-w: clamp(300px, 17vw, 320px);
+      --topbar-h: 76px;
+      --shell-gap: 18px;
+      --map-stage-h: clamp(380px, 48dvh, 560px);
+      --bottom-h: clamp(220px, 24dvh, 300px);
+    }
+    * { box-sizing: border-box; }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,.22) rgba(255,255,255,.04);
+    }
+    *::-webkit-scrollbar { width: 10px; height: 10px; }
+    *::-webkit-scrollbar-track { background: rgba(255,255,255,.035); border-radius: 999px; }
+    *::-webkit-scrollbar-thumb { background: rgba(255,255,255,.22); border-radius: 999px; border: 2px solid rgba(32,33,35,.85); }
+    *::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.32); }
+    html {
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", Arial, sans-serif;
+      background: #202123;
+      color: var(--text);
+      letter-spacing: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .shell {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .sidebar {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background: linear-gradient(180deg, rgba(38,39,43,.96), rgba(23,25,29,.96));
+      border-right: 1px solid var(--line);
+      padding: 20px 14px;
+      box-shadow: 18px 0 50px rgba(0,0,0,.34), inset -1px 0 0 rgba(255,255,255,.02);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .brand { padding: 4px 10px 22px; border-bottom: 1px solid var(--line); }
+    .brand-mark { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 15px; background: linear-gradient(145deg, #34363c, #24262b); border: 1px solid rgba(255,255,255,.1); color: #fff; font-weight: 900; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px rgba(0,0,0,.24); }
+    .brand-title { margin-top: 12px; color: #fff; font-size: 18px; font-weight: 900; }
+    .brand-subtitle { margin-top: 5px; color: var(--muted-2); font-size: 12px; font-weight: 700; }
+    .nav { display: grid; align-content: start; gap: 8px; margin-top: 20px; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
+    .nav a { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: 1px solid transparent; border-radius: 15px; color: #aeb7c3; font-size: 13px; font-weight: 800; text-decoration: none; transition: background .15s ease, border-color .15s ease, color .15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nav a::before { content: ""; width: 8px; height: 8px; flex: 0 0 auto; border-radius: 99px; background: #536070; }
+    .nav a:hover { background: rgba(255,255,255,.045); border-color: rgba(135,156,182,.12); color: #f3f6fa; }
+    .nav a.active { background: linear-gradient(180deg, rgba(135,156,182,.14), rgba(135,156,182,.06)); color: #fff; border-color: rgba(145,166,195,.18); box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 10px 26px rgba(0,0,0,.16); }
+    .nav a.active::before { background: var(--blue); box-shadow: 0 0 12px rgba(79,142,203,.48); }
+    .nav a.is-muted { color: #777f8b; cursor: default; }
+    .nav a.is-muted:hover { background: transparent; border-color: transparent; color: #777f8b; }
+    .user-card { margin: 18px 2px 0; padding: 16px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.04); box-shadow: inset 0 1px 0 rgba(255,255,255,.04), 0 14px 34px rgba(0,0,0,.18); }
+    .user-card strong { display: block; color: #fff; font-size: 13px; }
+    .user-card span { display: block; margin-top: 5px; color: var(--muted-2); font-size: 12px; line-height: 1.45; }
+    .workspace { display: grid; grid-template-rows: var(--topbar-h) minmax(0, 1fr); min-width: 0; min-height: 0; overflow: hidden; background: radial-gradient(circle at 28% 0%, #2a2c31 0, #202124 44%, #1f2023 100%); }
+    .topbar {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) repeat(4, minmax(96px, auto)) 46px auto minmax(96px, auto);
+      align-items: center;
+      gap: 12px;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(38, 39, 43, .78);
+      backdrop-filter: blur(18px);
+      box-shadow: inset 0 -1px 0 rgba(255,255,255,.02);
+      min-width: 0;
+      overflow: hidden;
+    }
+    .searchbox { height: 48px; display: flex; align-items: center; padding: 0 18px; border: 1px solid var(--line); border-radius: 18px; background: rgba(42,43,47,.92); color: var(--muted); font-size: 13px; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+    .top-filter, .top-status, .icon-btn {
+      height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(42,43,47,.92);
+      color: #d9dee5;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .top-filter { padding: 0 12px; min-width: 0; max-width: 150px; }
+    .icon-btn { width: 46px; display: grid; place-items: center; position: relative; }
+    .icon-btn::after { content: ""; position: absolute; right: 9px; top: 8px; width: 7px; height: 7px; border-radius: 99px; background: var(--red); box-shadow: 0 0 12px rgba(212,87,87,.8); }
+    .top-status { display: flex; align-items: center; gap: 8px; padding: 0 13px; white-space: nowrap; }
+    .top-status::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: var(--green); box-shadow: 0 0 12px rgba(63,179,120,.75); }
+    .top-clock { display: flex; align-items: center; height: 46px; padding: 0 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(42,43,47,.92); color: #f1f1f1; font-size: 12px; font-weight: 900; white-space: nowrap; }
+    .command-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--right-rail-w);
+      grid-template-rows: minmax(var(--map-stage-h), 1fr) var(--bottom-h);
+      gap: var(--shell-gap);
+      padding: 18px 22px 24px;
+      width: 100%;
+      height: 100%;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .map-panel { grid-column: 1; grid-row: 1; min-height: 0; }
+    .event-panel { grid-column: 1; grid-row: 2; min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+    .right-rail {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: grid;
+      grid-auto-rows: min-content;
+      gap: var(--shell-gap);
+      min-width: 0;
+      min-height: 0;
+      box-sizing: border-box;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 4px;
+      scrollbar-gutter: stable;
+    }
+    .panel {
+      background: linear-gradient(180deg, rgba(47, 48, 53, .94), rgba(42, 43, 47, .9));
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      box-shadow: var(--shadow-card);
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .panel.map-panel { padding: 18px; display: grid; grid-template-rows: auto 1fr; gap: 16px; position: relative; overflow: hidden; }
+    .panel.map-panel::after { content: ""; pointer-events: none; position: absolute; inset: 18px; top: 72px; border-radius: 20px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.018); z-index: 1; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; gap: 14px; min-height: 34px; }
+    .map-header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+    .map-header-actions a,
+    .map-header-actions button {
+      min-height: 34px;
+      padding: 0 11px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.035);
+      color: #e7ebf0;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .map-header-actions a:hover,
+    .map-header-actions button:hover { border-color: rgba(160,180,210,.24); background: rgba(255,255,255,.06); color: #fff; }
+    .panel-title { display: flex; align-items: center; gap: 10px; color: #fff; font-size: 16px; font-weight: 900; letter-spacing: .2px; }
+    .panel-title::before { content: ""; width: 8px; height: 8px; border-radius: 99px; background: #737b86; }
+    .panel-title.hot::before { background: var(--red); box-shadow: 0 0 12px rgba(212,87,87,.65); }
+    .panel-title.ok::before { background: var(--green); box-shadow: 0 0 12px rgba(63,179,120,.65); }
+    .panel-note { color: var(--muted-2); font-size: 12px; font-weight: 700; }
+    h2 {
+      margin: 0 0 10px;
+      color: #f6f7f9;
+      font-size: 15px;
+      font-weight: 800;
+      border-left: 3px solid #747b86;
+      padding-left: 9px;
+    }
+    iframe { width: 100%; height: 100%; min-width: 0; min-height: 0; border: 1px solid var(--line); border-radius: 20px; background: #202123; box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 22px 60px rgba(0,0,0,.28); display: block; }
+    .metric { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 12px; min-width: 0; }
+    .status-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+      min-width: 0;
+    }
+    .status-row {
+      display: grid;
+      grid-template-columns: minmax(72px, .42fr) minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      min-height: 36px;
+      padding: 7px 11px;
+      border: 1px solid var(--line-soft);
+      border-radius: 13px;
+      background: rgba(255,255,255,.026);
+    }
+    .status-row span {
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      text-transform: none;
+      white-space: nowrap;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .status-row strong {
+      min-width: 0;
+      color: #eef2f6;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .compare-card { border-left: 0; }
+    .compare-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+    .compare-item {
+      min-width: 0;
+      padding: 9px 10px;
+      border: 1px solid var(--line-soft);
+      border-radius: 13px;
+      background: rgba(255,255,255,.026);
+    }
+    .compare-item strong { display: block; color: #fff; font-size: 17px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .compare-item span { display: block; margin-top: 3px; color: var(--muted-2); font-size: 11px; font-weight: 900; white-space: nowrap; }
+    .compare-meta { margin-top: 9px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .compare-error { margin-top: 10px; color: #f0b766; font-size: 13px; line-height: 1.6; }
+    .box, .feed, .place-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, rgba(48, 49, 54, .94), rgba(42, 43, 47, .9));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+    }
+    .box { padding: 16px; min-width: 0; overflow: hidden; }
+    .label { color: var(--muted-2); font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .value { margin-top: 8px; color: #fff; font-size: clamp(20px, 1.45vw, 28px); font-weight: 900; line-height: 1.08; white-space: normal; overflow-wrap: anywhere; word-break: keep-all; }
+    ul { margin: 8px 0 0; padding-left: 20px; color: #d2d6dc; line-height: 1.8; }
+    a { color: #d7e2ef; font-weight: 700; text-decoration: none; }
+    a:hover { color: #fff; }
+    .feed { box-sizing: border-box; width: 100%; max-width: 100%; margin-top: 10px; padding: 10px 12px; color: #d9dde3; font-size: 13px; line-height: 1.5; max-height: 220px; overflow-y: auto; overflow-x: hidden; border-color: var(--line-soft); background: rgba(255,255,255,.018); }
+    .event-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; min-width: 0; min-height: 0; overflow: hidden; }
+    .event-column { min-width: 0; min-height: 0; overflow: hidden; display: grid; grid-template-rows: auto auto minmax(0, 1fr); }
+    .event-grid .feed { max-width: 100%; max-height: none; height: auto; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 16px; }
+    .right-rail .feed { max-height: none; overflow: visible; }
+    .rail-card #decisionStatus.feed,
+    .rail-card #hotZones.feed {
+      padding: 0;
+      border: 0;
+      background: transparent;
+      box-shadow: none;
+    }
+    .feed > div { padding: 9px 0; border-bottom: 1px solid var(--line-soft); }
+    .feed > div:last-child { border-bottom: 0; }
+    .event-grid .feed > div { padding: 0; }
+    .event-row {
+      display: grid;
+      grid-template-columns: 72px minmax(110px, .45fr) minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      min-height: 42px;
+      padding: 7px 0;
+    }
+    .event-time { color: var(--muted-2); font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .event-source { min-width: 0; color: #dce2e8; font-size: 12px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-text { min-width: 0; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-tag { color: var(--muted-2); font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .summary-list-row {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      min-height: 42px;
+      padding: 7px 0;
+    }
+    .summary-list-row .summary-time {
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .summary-list-row .summary-main {
+      min-width: 0;
+      color: #edf1f5;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .summary-list-row .summary-source {
+      margin-top: 3px;
+      color: var(--muted-2);
+      font-size: 11px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .summary-list-row .badge {
+      white-space: nowrap;
+    }
+    .summary-list-row .actions {
+      display: none;
+      margin-top: 6px;
+      gap: 6px;
+    }
+    .summary-list-row:hover .actions {
+      display: flex;
+    }
+    .summary-list-row .actions a,
+    .summary-list-row .actions button {
+      padding: 5px 8px;
+      font-size: 11px;
+    }
+    .hot-rank {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .hot-rank-row {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr) 48px 48px;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line-soft);
+    }
+    .hot-rank-row:last-child { border-bottom: 0; }
+    .hot-rank-no { color: var(--red); font-size: 12px; font-weight: 900; }
+    .hot-rank-area { min-width: 0; color: #eef2f6; font-size: 13px; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hot-rank-score, .hot-rank-count { color: var(--muted); font-size: 12px; font-weight: 800; text-align: right; white-space: nowrap; }
+    .filters { margin: 14px 0 4px; }
+    .statusline { margin: 6px 0 10px; color: var(--muted-2); font-size: 12px; line-height: 1.45; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .actions a, .actions button {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(42,43,47,.92);
+      color: #e7ebf0;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .actions a:hover, .actions button:hover { border-color: #626b78; background: #171a20; }
+    .place-card { box-sizing: border-box; width: 100%; max-width: 100%; padding: 18px 20px; margin: 10px 0; border-left: 3px solid #555d68; overflow: visible; }
+    .feed .place-card div { border-bottom: 0; padding: 0; }
+    .place-title { max-width: 100%; font-size: 17px; font-weight: 900; color: #fff; margin-bottom: 12px; line-height: 1.45; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .place-row { max-width: 100%; margin: 7px 0; color: #d5dae0; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .place-row span:first-child { display: inline-block; min-width: 68px; color: var(--muted); font-size: 12px; }
+    .muted { max-width: 100%; color: var(--muted-2); font-size: 12px; overflow-wrap: anywhere; word-break: break-word; white-space: normal; }
+    .address-detail-card {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 0;
+      margin: 10px 0;
+      border: 1px solid var(--line);
+      border-left: 3px solid #596675;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      overflow: hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+    }
+    .address-detail-inner {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      min-height: 0;
+      max-height: none;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 20px 24px;
+      padding-right: 40px;
+    }
+    .address-detail-title {
+      width: 100%;
+      max-width: 100%;
+      margin-bottom: 14px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.5;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .kv-list {
+      display: grid;
+      grid-template-columns: minmax(88px, 110px) minmax(0, 1fr);
+      gap: 9px 14px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+    .kv-key {
+      box-sizing: border-box;
+      min-width: 0;
+      color: var(--muted-2);
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.55;
+      white-space: normal;
+    }
+    .kv-value {
+      box-sizing: border-box;
+      min-width: 0;
+      color: #dde1e6;
+      font-size: 13px;
+      line-height: 1.55;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .info-card {
+      box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 10px 0;
+      padding: 20px 24px;
+      padding-right: 38px;
+      border: 1px solid var(--line);
+      border-left: 3px solid #596675;
+      border-radius: var(--radius-md);
+      background: linear-gradient(180deg, rgba(48,49,54,.96), rgba(42,43,47,.94));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+      overflow: visible;
+    }
+    .info-card.high { border-left-color: var(--green); }
+    .info-card.pending { border-left-color: var(--orange); }
+    .info-title {
+      margin: 0 0 16px;
+      color: #fff;
+      font-size: 17px;
+      font-weight: 900;
+      line-height: 1.5;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .info-field {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      padding: 10px 0;
+      border-top: 1px solid var(--line-soft);
+    }
+    .info-field:first-of-type { border-top: 0; padding-top: 0; }
+    .info-label {
+      margin-bottom: 4px;
+      color: var(--muted-2);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .info-value {
+      color: #e1e4e8;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 900; line-height: 1.5; border: 1px solid transparent; }
+    .badge.high { background: rgba(63,179,120,.16); color: #78d8a5; border-color: rgba(63,179,120,.38); }
+    .badge.medium { background: rgba(211,139,47,.16); color: #f0b766; border-color: rgba(211,139,47,.38); }
+    .badge.low { background: rgba(154,163,175,.13); color: #c3c9d0; border-color: rgba(154,163,175,.28); }
+    .badge.kind { background: rgba(79,142,203,.13); color: #9cc4ee; border-color: rgba(79,142,203,.32); }
+    select {
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(42,43,47,.92);
+      color: var(--text);
+    }
+    select option {
+      background: #0b1019;
+      color: var(--text);
+    }
+    details { color: #d5dae0; }
+    details summary { cursor: pointer; color: #f6f7f9; }
+    .trend-placeholder { display: grid; grid-template-columns: repeat(12, 1fr); align-items: end; gap: 6px; height: 78px; margin-top: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.025); }
+    .trend-placeholder span { display: block; min-height: 8px; border-radius: 99px 99px 3px 3px; background: linear-gradient(180deg, rgba(79,142,203,.64), rgba(79,142,203,.16)); box-shadow: 0 -8px 18px rgba(79,142,203,.08); }
+    .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .quick-actions a { padding: 11px 12px; border: 1px solid rgba(135,156,182,.18); border-radius: 13px; background: rgba(255,255,255,.045); color: #e7ebf0; font-size: 12px; text-align: center; }
+    .badge, .actions, .actions a, .actions button, .nav a, .top-filter, .top-status, .icon-btn, .quick-actions a, .map-header-actions a, .map-header-actions button, .info-label {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    @media (min-width: 1920px) {
+      :root {
+        --sidebar-w: 220px;
+        --right-rail-w: 340px;
+        --shell-gap: 20px;
+        --map-stage-h: clamp(420px, 50dvh, 620px);
+        --bottom-h: clamp(230px, 23dvh, 300px);
+      }
+      .command-grid { padding: 20px 24px 28px; }
+    }
+    @media (max-width: 1919px) {
+      :root {
+        --sidebar-w: 180px;
+        --right-rail-w: 300px;
+        --shell-gap: 18px;
+      }
+      .brand-title { font-size: 16px; }
+      .nav a { font-size: 12px; min-height: 42px; }
+      .panel { padding: 20px; }
+    }
+    @media (max-width: 1439px) {
+      :root {
+        --sidebar-w: 156px;
+        --right-rail-w: 276px;
+        --shell-gap: 14px;
+        --map-stage-h: clamp(360px, 48dvh, 520px);
+        --bottom-h: clamp(205px, 24dvh, 270px);
+      }
+      .sidebar { padding: 16px 10px; }
+      .brand { padding: 2px 8px 16px; }
+      .brand-mark { width: 38px; height: 38px; border-radius: 13px; }
+      .brand-title { font-size: 14px; }
+      .brand-subtitle { font-size: 11px; }
+      .nav { gap: 6px; margin-top: 16px; }
+      .nav a { min-height: 38px; padding: 0 9px; gap: 9px; font-size: 11px; }
+      .user-card { padding: 12px; border-radius: 16px; }
+      .topbar { grid-template-columns: minmax(130px, 1fr) repeat(4, minmax(84px, auto)) 42px auto minmax(82px, auto); gap: 8px; padding: 12px 14px; }
+      .searchbox, .top-filter, .top-status, .icon-btn, .top-clock { height: 42px; border-radius: 14px; font-size: 11px; }
+      .searchbox { padding: 0 12px; }
+      .top-filter { max-width: 118px; padding: 0 8px; }
+      .icon-btn { width: 42px; }
+      .command-grid { grid-template-rows: minmax(var(--map-stage-h), 1fr) var(--bottom-h); padding: 14px 16px 20px; }
+      .panel { padding: 16px; border-radius: 18px; }
+      .panel.map-panel { padding: 14px; gap: 12px; }
+      .panel.map-panel::after { inset: 14px; top: 64px; }
+      .metric { grid-template-columns: 1fr; gap: 10px; }
+      .value { font-size: 22px; }
+      .feed { font-size: 12px; }
+    }
+    @media (max-width: 1600px) {
+      :root { --right-rail-w: 280px; }
+      .right-rail { gap: 14px; }
+      .right-rail .panel { padding: 16px; }
+      .metric { grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 10px; }
+      .box { padding: 13px; }
+      .status-row { padding: 9px 11px; }
+      .rail-card .feed,
+      .rail-card.compact .feed { max-height: none; }
+    }
+    @media (max-width: 1450px) {
+      .metric { grid-template-columns: 1fr; }
+      .box { padding: 12px 13px; }
+      .value { font-size: 22px; }
+      .right-rail .panel { padding: 14px; }
+    }
+    @media (max-width: 1199px) {
+      :root {
+        --sidebar-w: 140px;
+        --shell-gap: 14px;
+        --map-stage-h: clamp(380px, 52dvh, 560px);
+        --bottom-h: clamp(210px, 26dvh, 290px);
+      }
+      .topbar { grid-template-columns: minmax(160px, 1fr) repeat(3, minmax(82px, auto)) 42px auto; }
+      .topbar .top-filter:nth-of-type(4),
+      .topbar .top-status { display: none; }
+      .command-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: minmax(390px, 1fr) var(--bottom-h);
+        overflow-y: hidden;
+        overflow-x: hidden;
+      }
+      .map-panel { grid-column: 1; grid-row: 1; }
+      .event-panel { grid-column: 1; grid-row: 2; }
+      .right-rail {
+        display: none;
+      }
+    }
+    @media (max-height: 820px) {
+      :root { --bottom-h: clamp(190px, 23dvh, 245px); }
+      .panel { padding: 14px; }
+      .right-rail { gap: 12px; }
+      .event-row,
+      .summary-list-row { min-height: 38px; padding: 5px 0; }
+      .trend-placeholder { height: 58px; padding: 10px; }
+    }
+    @media (max-height: 760px) {
+      :root {
+        --map-stage-h: 320px;
+        --bottom-h: clamp(170px, 22dvh, 220px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">DP</div>
+        <div class="brand-title">DrivePilot Live</div>
+        <div class="brand-subtitle">Command Center v1</div>
+      </div>
+      <nav class="nav" aria-label="DrivePilot menu">
+        <a class="active" href="#">戰情總覽</a>
+        <a href="#" data-nav="map">即時地圖</a>
+        <a href="#recentNotifications">市場訊號</a>
+        <a href="#diagnosticPanel">系統工具</a>
+        <a class="is-muted" href="#" aria-disabled="true">設定</a>
+      </nav>
+      <div class="user-card">
+        <strong>Radar Mode</strong>
+        <span>工作 LINE 接收中<br>主手機只看整理後資訊</span>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <div class="topbar">
+        <div class="searchbox">搜尋群組、地址、地標</div>
+        <select id="timeWindow" class="top-filter">
+          <option value="15">最近 15 分鐘</option>
+          <option value="30">最近 30 分鐘</option>
+          <option value="60" selected>最近 60 分鐘</option>
+          <option value="180">最近 3 小時</option>
+          <option value="1440">最近 24 小時</option>
+          <option value="all">全部</option>
+        </select>
+        <select class="top-filter" aria-label="event type">
+          <option>全部事件</option>
+          <option>地址</option>
+          <option>地標</option>
+          <option>待確認</option>
+        </select>
+        <select class="top-filter" aria-label="confidence">
+          <option>全部狀態</option>
+          <option>定位：已定位</option>
+          <option>定位：待補座標</option>
+          <option>待確認</option>
+        </select>
+        <button class="top-filter" type="button">更多篩選</button>
+        <button class="icon-btn" type="button" aria-label="notifications">●</button>
+        <div id="topClock" class="top-clock">--:--:--</div>
+        <div class="top-status">系統正常</div>
+      </div>
+
+      <main class="command-grid">
+        <section class="panel map-panel">
+          <div class="panel-header">
+            <div>
+              <div class="panel-title ok">即時地圖</div>
+              <div id="filterStatus" class="statusline">載入中</div>
+            </div>
+            <div class="map-header-actions" aria-label="map actions">
+              <button type="button" data-map-action="googleAll">Google Maps</button>
+              <button type="button" data-map-action="fitMarkers">Fit Markers</button>
+              <a href="index.html" target="_blank" rel="noreferrer">全畫面檢視</a>
+              <a href="data/map_points.kml" target="_blank" rel="noreferrer">KML</a>
+            </div>
+          </div>
+          <iframe id="mapFrameEmbed" src="index.html?embed=1&t=20260506h" title="DrivePilot map"></iframe>
+        </section>
+
+        <section class="panel event-panel">
+          <div class="panel-header">
+            <div class="panel-title">事件中心</div>
+            <div class="panel-note">事件流 / 解析地址</div>
+          </div>
+          <div class="event-grid">
+            <div class="event-column">
+              <div class="panel-note">最新事件</div>
+              <div id="notificationStatus" class="statusline"></div>
+              <div id="recentNotifications" class="feed">載入中</div>
+            </div>
+            <div class="event-column">
+              <div class="panel-note">解析地址</div>
+              <div id="placeStatus" class="statusline"></div>
+              <div id="recentPlaces" class="feed">載入中</div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="right-rail">
+          <section class="panel rail-card compact">
+            <div class="panel-header">
+              <div class="panel-title hot">熱門區域排行榜</div>
+              <div class="panel-note">Top 3</div>
+            </div>
+            <div id="hotZoneStatus" class="statusline"></div>
+            <div id="hotZones" class="feed">載入中</div>
+          </section>
+
+          <section class="panel rail-card compact compare-card">
+            <div class="panel-header">
+              <div class="panel-title ok">24HR 市場對比</div>
+              <div class="panel-note">市場訊號</div>
+            </div>
+            <div id="signalStats24h" class="compare-error">24HR 統計資料載入中</div>
+          </section>
+
+          <section class="panel rail-card compact">
+            <div class="panel-header">
+              <div class="panel-title ok">系統健康</div>
+              <div class="panel-note">Live</div>
+            </div>
+            <div class="status-list" aria-label="DrivePilot system status">
+              <div class="status-row"><span>24HR 最後更新</span><strong id="marketDataUpdatedAt">--</strong></div>
+              <div class="status-row"><span>Marker 最後更新</span><strong id="markerUpdatedAt">--</strong></div>
+              <div class="status-row"><span>Marker 數量</span><strong id="markerCount">--</strong></div>
+              <div class="status-row"><span>map_points</span><strong id="mapPointsReadStatus">尚未讀取</strong></div>
+              <div class="status-row"><span>CSV 總筆數</span><strong id="mapPointsCsvRows">--</strong></div>
+              <div class="status-row"><span>有效座標</span><strong id="mapPointsValidRows">--</strong></div>
+              <div class="status-row"><span>目前時間篩選</span><strong id="mapPointsFilterLabel">--</strong></div>
+              <div class="status-row"><span>目前篩選 marker</span><strong id="mapPointsFilteredRows">--</strong></div>
+              <div class="status-row"><span>已畫 marker</span><strong id="mapPointsRenderedRows">--</strong></div>
+              <div class="status-row"><span>最後讀取</span><strong id="mapPointsLoadedAt">--</strong></div>
+              <div class="status-row"><span>資料來源</span><strong>LINE 接收中</strong></div>
+              <div class="status-row"><span>解析管線</span><strong>正常</strong></div>
+              <div class="status-row"><span>目前模式</span><strong>Radar</strong></div>
+              <div class="status-row"><span>最後訊號</span><strong id="lastSignalStatus">--</strong></div>
+            </div>
+            <div id="decisionStatus" class="feed">載入中</div>
+          </section>
+
+          <section id="trendPanel" class="panel rail-card compact">
+            <div class="panel-header">
+              <div class="panel-title">事件統計</div>
+              <div class="panel-note">視覺佔位</div>
+            </div>
+            <div class="trend-placeholder" aria-label="static trend placeholder">
+              <span style="height:24%"></span><span style="height:42%"></span><span style="height:36%"></span><span style="height:58%"></span>
+              <span style="height:45%"></span><span style="height:72%"></span><span style="height:64%"></span><span style="height:86%"></span>
+              <span style="height:52%"></span><span style="height:67%"></span><span style="height:39%"></span><span style="height:48%"></span>
+            </div>
+          </section>
+
+          <section class="panel rail-card">
+            <div class="panel-header">
+              <div class="panel-title">快速操作</div>
+              <div class="panel-note">捷徑</div>
+            </div>
+            <div class="quick-actions">
+              <a href="mobile_dashboard.html">手機戰情室</a>
+              <a href="index.html">獨立地圖</a>
+            </div>
+            <details id="diagnosticPanel" style="margin-top:14px">
+              <summary><strong>raw 通知診斷</strong></summary>
+              <div id="diagnosticStatus" class="statusline"></div>
+              <div id="recentDiagnostics" class="feed">載入中</div>
+            </details>
+          </section>
+        </aside>
+      </main>
+    </div>
+  </div>
+  <script>
+    const currentAreaKey = "drivepilot_current_area";
+    const observationStartKey = "drivepilot_observation_start_time";
+    const observationStopKey = "drivepilot_observation_stop_time";
+    const observationActiveKey = "drivepilot_observation_active";
+    let markerLocationKeys = new Set();
+    let unresolvedLocationKeys = new Set();
+
+    async function loadText(path) {
+      const cachePath = `${path}?t=${Date.now()}`;
+      const fallbackPath = path.startsWith("data/") ? `../live-data/${path.slice(5)}?t=${Date.now()}` : cachePath;
+      for (const url of [cachePath, fallbackPath]) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (response.ok) return response.text();
+        } catch (_) {}
+      }
+      return "";
+    }
+
+    function escapeHtml(value) {
+      return String(value || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[char]);
+    }
+
+    function parseCsv(text) {
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+      for (let i = 0; i < text.length; i += 1) {
+        const char = text[i];
+        const next = text[i + 1];
+        if (quoted) {
+          if (char === '"' && next === '"') {
+            field += '"';
+            i += 1;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field);
+          rows.push(row);
+          row = [];
+          field = "";
+        } else if (char !== "\r") {
+          field += char;
+        }
+      }
+      if (field.length || row.length) {
+        row.push(field);
+        rows.push(row);
+      }
+      return rows;
+    }
+
+    function selectedWindow() {
+      return normalizeWindow(document.getElementById("timeWindow").value);
+    }
+
+    function normalizeWindow(value) {
+      const text = String(value || "60").replace("m", "");
+      if (text === "today") return "all";
+      return ["15", "30", "60", "180", "1440", "all"].includes(text) ? text : "60";
+    }
+
+    function windowLabel() {
+      const mode = selectedWindow();
+      if (mode === "all") return "全部";
+      if (mode === "180") return "最近 3 小時";
+      if (mode === "1440") return "最近 24 小時";
+      return `最近 ${mode} 分鐘`;
+    }
+
+    function parseTimestamp(timestamp) {
+      const date = new Date(String(timestamp || "").replace(" ", "T"));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function withinWindow(timestamp) {
+      const mode = selectedWindow();
+      if (mode === "all") return true;
+      const date = parseTimestamp(timestamp);
+      if (!date) return false;
+      const now = new Date();
+      return now - date <= Number(mode) * 60 * 1000;
+    }
+
+    function shortText(value, max = 42) {
+      const text = String(value || "");
+      return text.length > max ? `${text.slice(0, max)}...` : text;
+    }
+
+    function getCurrentArea() {
+      return localStorage.getItem(currentAreaKey) || "";
+    }
+
+    function getObservationStart() {
+      const value = localStorage.getItem(observationStartKey);
+      if (!value) return null;
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    function isObservationActive() {
+      return localStorage.getItem(observationActiveKey) === "true";
+    }
+
+    function getObservationEnd() {
+      if (isObservationActive()) return new Date();
+      const value = localStorage.getItem(observationStopKey);
+      if (!value) return new Date();
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? new Date() : date;
+    }
+
+    function formatDuration(ms) {
+      const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return `${minutes}分${String(seconds).padStart(2, "0")}秒`;
+    }
+
+    function timeAgoText(value) {
+      const date = parseTimestamp(value);
+      if (!date) return "--";
+      const minutes = Math.max(0, Math.floor((Date.now() - date.getTime()) / 60000));
+      if (minutes < 1) return "0 分鐘前";
+      if (minutes < 60) return `${minutes} 分鐘前`;
+      return `${Math.floor(minutes / 60)} 小時前`;
+    }
+
+    function mapActions(address, place) {
+      const encoded = encodeURIComponent(address || "");
+      const caution = place && (place.kind === "description" || place.confidence === "low") ? `<br><span class="label">待確認地點</span>` : "";
+      return `${caution}<div class="actions"><a href="https://www.google.com/maps/search/?api=1&query=${encoded}" target="_blank" rel="noreferrer">Google Maps 搜尋</a><a href="https://www.google.com/maps/dir/?api=1&destination=${encoded}" target="_blank" rel="noreferrer">Google Maps 導航</a><button type="button" data-copy-address="${escapeHtml(address)}">複製地址</button></div>`;
+    }
+
+    function badge(value, type = "") {
+      const safe = escapeHtml(value || "");
+      return safe ? `<span class="badge ${escapeHtml(type || safe)}">${safe}</span>` : "";
+    }
+
+    function formatKind(value) {
+      const map = {
+        place: "地址",
+        place_alias: "地標別名",
+        landmark: "地標",
+        start: "開始",
+        end: "結束",
+        description: "待確認",
+        dispatcher_private: "個人提醒"
+      };
+      return map[value] || value || "地址";
+    }
+
+    function formatConfidence(value) {
+      const map = { high: "解析：高", medium: "解析：中", low: "解析：低" };
+      return map[value] || "解析：未知";
+    }
+
+    function locationMatchKey(value) {
+      return String(value || "")
+        .replace(/\u3000/g, " ")
+        .replace(/\s+/g, "")
+        .replace(/[，,。．.、；;：:｜|()（）「」『』【】\[\]{}<>《》"'`~!！?？\-–—_+＝=]/g, "")
+        .trim();
+    }
+
+    function locationKeysForPlace(place) {
+      return [
+        place && place.address,
+        place && place.normalizedAddress,
+        place && place.matchKey,
+        place && place.resolvedAddress,
+        place && place.place,
+        place && place.landmark
+      ].map(locationMatchKey).filter(Boolean);
+    }
+
+    function toNumber(value) {
+      const raw = String(value || "").trim();
+      if (!raw) return null;
+      const number = Number(raw);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function isValidLatLng(lat, lng) {
+      return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+    }
+
+    function hasKeyInSet(keys, set) {
+      return keys.some((key) => set.has(key));
+    }
+
+    function locationStatusForPlace(place) {
+      const keys = locationKeysForPlace(place);
+      if (!keys.length || place.kind === "description" || place.kind === "driver_reply") return { label: "定位：未解析", badgeClass: "low" };
+      if (isValidLatLng(toNumber(place.lat), toNumber(place.lng)) || hasKeyInSet(keys, markerLocationKeys)) return { label: "定位：已定位", badgeClass: "high" };
+      if (hasKeyInSet(keys, unresolvedLocationKeys) || place.address) return { label: "定位：待補座標", badgeClass: "medium" };
+      return { label: "定位：未解析", badgeClass: "low" };
+    }
+
+    function valueForHeader(row, headers, names) {
+      for (const name of names) {
+        const i = headers.indexOf(name);
+        if (i >= 0 && row[i] !== undefined && row[i] !== "") return row[i];
+      }
+      return "";
+    }
+
+    function buildMarkerLocationKeySet(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = (rows[0] || []).map((header) => String(header || "").trim());
+      const next = new Set();
+      rows.slice(1).forEach((row) => {
+        const lat = toNumber(valueForHeader(row, headers, ["lat", "latitude"]));
+        const lng = toNumber(valueForHeader(row, headers, ["lng", "lon", "longitude"]));
+        if (!isValidLatLng(lat, lng)) return;
+        [
+          valueForHeader(row, headers, ["address"]),
+          valueForHeader(row, headers, ["normalized_address", "normalizedAddress"]),
+          valueForHeader(row, headers, ["resolved_address", "resolvedAddress"]),
+          valueForHeader(row, headers, ["match_key", "matchKey"]),
+          valueForHeader(row, headers, ["note"]),
+          valueForHeader(row, headers, ["text_summary"])
+        ].map(locationMatchKey).filter(Boolean).forEach((key) => next.add(key));
+      });
+      return next;
+    }
+
+    function buildUnresolvedLocationKeySet(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = (rows[0] || []).map((header) => String(header || "").trim());
+      const next = new Set();
+      rows.slice(1).forEach((row) => {
+        [
+          valueForHeader(row, headers, ["raw_address", "address"]),
+          valueForHeader(row, headers, ["normalized_address", "normalizedAddress"]),
+          valueForHeader(row, headers, ["match_key", "matchKey"])
+        ].map(locationMatchKey).filter(Boolean).forEach((key) => next.add(key));
+      });
+      return next;
+    }
+
+    function formatCount(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? String(number) : "0";
+    }
+
+    function formatDelta(value) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return "0";
+      if (number > 0) return `+${number}`;
+      return String(number);
+    }
+
+    function formatShortTime(value) {
+      const text = String(value || "").trim();
+      if (!text) return "--";
+      const parts = text.split(" ");
+      return parts.length > 1 ? parts[1].slice(0, 5) : text;
+    }
+
+    function updateMarketDataUpdatedAt(value) {
+      const target = document.getElementById("marketDataUpdatedAt");
+      if (target) target.textContent = String(value || "--").trim() || "--";
+    }
+
+    function normalizeSignalStatsPayload(payload) {
+      if (!payload || typeof payload !== "object") return null;
+      return payload.ok === true && payload.data ? payload.data : payload;
+    }
+
+    function numberOrFallback(primary, fallback) {
+      const number = Number(primary);
+      if (Number.isFinite(number)) return number;
+      const fallbackNumber = Number(fallback);
+      return Number.isFinite(fallbackNumber) ? fallbackNumber : 0;
+    }
+
+    function marketSignalState(deltaValue) {
+      const deltaNumber = Number(deltaValue);
+      if (!Number.isFinite(deltaNumber) || deltaNumber === 0) return "持平";
+      return deltaNumber > 0 ? "升溫" : "降溫";
+    }
+
+    function renderSignalStats24h(payload) {
+      const target = document.getElementById("signalStats24h");
+      if (!target) return;
+      const data = normalizeSignalStatsPayload(payload);
+      if (!data || typeof data !== "object") {
+        target.className = "compare-error";
+        target.textContent = "24HR 統計資料讀取失敗";
+        return;
+      }
+
+      const current = data.current_24h || {};
+      const previous = data.previous_24h || {};
+      const delta = data.delta || {};
+      updateMarketDataUpdatedAt(data.generated_at);
+      const currentRaw = numberOrFallback(current.raw_count, current.total_signals);
+      const previousRaw = numberOrFallback(previous.raw_count, previous.total_signals);
+      const rawDelta = Number.isFinite(Number(delta.raw_count)) ? Number(delta.raw_count) : currentRaw - previousRaw;
+      const deduped = numberOrFallback(current.deduped_count, currentRaw);
+      const duplicate = numberOrFallback(current.duplicate_count, Math.max(0, currentRaw - deduped));
+
+      target.className = "";
+      target.innerHTML = `
+        <div class="compare-grid">
+          <div class="compare-item"><strong>${escapeHtml(formatCount(currentRaw))}</strong><span>原始訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(previousRaw))}</strong><span>昨日同時段</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatDelta(rawDelta))}</strong><span>變化</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(deduped))}</strong><span>去重後訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(formatCount(duplicate))}</strong><span>重複訊號</span></div>
+          <div class="compare-item"><strong>${escapeHtml(marketSignalState(rawDelta))}</strong><span>觀察中</span></div>
+        </div>
+        <div class="compare-meta">統計產生：${escapeHtml(formatShortTime(data.generated_at))}</div>
+      `;
+    }
+
+    async function loadSignalStats24h() {
+      const target = document.getElementById("signalStats24h");
+      const stamp = Date.now();
+      const urls = [`data/signal_stats_24h.json?t=${stamp}`, `../live-data/signal_stats_24h.json?t=${stamp}`];
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (response.status === 404) continue;
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          renderSignalStats24h(await response.json());
+          return;
+        } catch (error) {
+          if (url === urls[urls.length - 1]) {
+            console.warn("DrivePilot 24HR stats unavailable", error && error.message ? error.message : error);
+          }
+        }
+      }
+      if (target) {
+        target.className = "compare-error";
+        target.textContent = "24HR 統計資料讀取失敗";
+      }
+    }
+
+    function updateMarkerHealth(payload) {
+      const updatedAt = document.getElementById("markerUpdatedAt");
+      const count = document.getElementById("markerCount");
+      if (!payload || typeof payload !== "object") {
+        if (updatedAt) updatedAt.textContent = "--";
+        if (count) count.textContent = "--";
+        return;
+      }
+      if (updatedAt) updatedAt.textContent = String(payload.generated_at || "--").trim() || "--";
+      if (count) count.textContent = formatCount(payload.output_markers);
+    }
+
+    async function loadMarkerHealth() {
+      const stamp = Date.now();
+      const urls = [`data/marker_health.json?t=${stamp}`, `../live-data/marker_health.json?t=${stamp}`];
+      for (const url of urls) {
+        try {
+          const response = await fetch(url, { cache: "no-store" });
+          if (response.status === 404) continue;
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          updateMarkerHealth(await response.json());
+          return;
+        } catch (error) {
+          if (url === urls[urls.length - 1]) {
+            console.warn("DrivePilot marker health unavailable", error && error.message ? error.message : error);
+          }
+        }
+      }
+      updateMarkerHealth(null);
+    }
+
+    function compactTime(value) {
+      const date = parseTimestamp(value);
+      if (!date) return shortText(value || "--", 8);
+      return date.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", hour12: false });
+    }
+
+    function placeListRow(place) {
+      const confidence = place.confidence || "low";
+      const locationStatus = locationStatusForPlace(place);
+      const address = place.address || place.text || "--";
+      return `<div class="summary-list-row" title="${escapeHtml(address)}">
+        <div class="summary-time">${escapeHtml(compactTime(place.timestamp))}</div>
+        <div class="summary-copy">
+          <div class="summary-main">${escapeHtml(address)}</div>
+          <div class="summary-source">${escapeHtml(shortText(place.group || place.kind || "", 46))}</div>
+          ${mapActions(place.address, place)}
+        </div>
+        <div>${badge(formatConfidence(confidence), confidence)} ${badge(locationStatus.label, locationStatus.badgeClass)}</div>
+      </div>`;
+    }
+
+    function notificationListRow(item) {
+      const text = item.text || item.message || item.raw_text || "";
+      const source = item.group || item.title || item.source || "";
+      const tag = item.dispatcher_private || (Array.isArray(item.tags) && item.tags.includes("dispatcher_private"))
+        ? "?犖??"
+        : (item.confidence ? formatConfidence(item.confidence) : (item.kind || item.type || "LINE"));
+      return `<div class="event-row" title="${escapeHtml(text)}">
+        <div class="event-time">${escapeHtml(compactTime(item.timestamp || item.received_at || item.time || ""))}</div>
+        <div class="event-source">${escapeHtml(shortText(source, 42))}</div>
+        <div class="event-text">${escapeHtml(text)}</div>
+        <div class="event-tag">${escapeHtml(shortText(tag, 12))}</div>
+      </div>`;
+    }
+
+    function parsePlaces(csvText) {
+      const rows = parseCsv(csvText);
+      const headers = rows[0] || [];
+      const index = (name) => headers.indexOf(name);
+      const valueFor = (row, names) => {
+        for (const name of names) {
+          const i = index(name);
+          if (i >= 0 && row[i] !== undefined && row[i] !== "") return row[i];
+        }
+        return "";
+      };
+      return rows.slice(1).filter((row) => row.length >= 4).map((row) => ({
+        timestamp: row[index("timestamp")] || "",
+        group: row[index("group")] || "",
+        kind: row[index("kind")] || "",
+        address: row[index("address")] || "",
+        normalizedAddress: valueFor(row, ["normalized_address", "normalizedAddress"]),
+        matchKey: valueFor(row, ["match_key", "matchKey"]),
+        resolvedAddress: valueFor(row, ["resolved_address", "resolvedAddress"]),
+        place: valueFor(row, ["place"]),
+        landmark: valueFor(row, ["landmark"]),
+        confidence: row[index("confidence")] || "low",
+        notificationTime: row[index("notification_time")] || "",
+        note: row[index("note")] || "",
+        priceNote: row[index("price_note")] || "",
+        text: row[index("text")] || "",
+        lat: valueFor(row, ["lat", "latitude"]),
+        lng: valueFor(row, ["lng", "lon", "longitude"]),
+        source: valueFor(row, ["source"])
+      })).filter((place) => place.timestamp && place.group && place.address);
+    }
+
+    function parseNotifications(jsonlText) {
+      return jsonlText.trim().split(/\r?\n/).filter(Boolean).map((line) => {
+        try { return JSON.parse(line); } catch (_) { return null; }
+      }).filter(Boolean);
+    }
+
+    function getArea(address) {
+      const match = String(address || "").match(/高雄市([\u4e00-\u9fff]{1,4}區)|^([\u4e00-\u9fff]{1,4}區)/);
+      return match ? (match[1] || match[2]) : "未知";
+    }
+
+    function renderRecent(target, items, formatter) {
+      const el = document.getElementById(target);
+      const latest = items.slice(-5).reverse();
+      el.innerHTML = latest.length ? latest.map((item) => `<div>${formatter(item)}</div>`).join("") : "目前範圍內沒有資料";
+    }
+
+    function renderDiagnostics(items) {
+      const latest = items.slice(-10).reverse();
+      document.getElementById("diagnosticStatus").textContent = `最近 ${latest.length} 筆 · 正常`;
+      document.getElementById("recentDiagnostics").innerHTML = latest.length ? latest.map((item) => {
+        const text = shortText(item.text || "", 90);
+        return `<div><strong>${escapeHtml(item.received_at || "")}</strong> ${escapeHtml(item.title || "")}<br>${escapeHtml(text)}<br>解析結果：${escapeHtml(item.parser_result || "")} / 地址數：${escapeHtml(item.address_count || 0)} / kind：${escapeHtml(item.kind || "")}</div>`;
+      }).join("") : "目前沒有診斷資料";
+    }
+
+    function renderHotZones(places) {
+      const zones = new Map();
+      for (const place of places) {
+        const area = getArea(place.address);
+        if (!zones.has(area)) {
+          zones.set(area, { area, count: 0, high: 0, medium: 0, low: 0, latestAddress: "", latestTime: "" });
+        }
+        const zone = zones.get(area);
+        zone.count += 1;
+        if (place.confidence === "high") zone.high += 1;
+        else if (place.confidence === "medium") zone.medium += 1;
+        else zone.low += 1;
+        if (!zone.latestTime || String(place.timestamp) > String(zone.latestTime)) {
+          zone.latestTime = place.timestamp;
+          zone.latestAddress = place.address;
+        }
+      }
+      const ranked = Array.from(zones.values())
+        .filter((zone) => zone.area !== "未知")
+        .map((zone) => ({ ...zone, score: zone.count * 3 + zone.high * 2 + zone.medium }))
+        .sort((a, b) => b.score - a.score || String(b.latestTime).localeCompare(String(a.latestTime)))
+        .slice(0, 3);
+      document.getElementById("hotZoneStatus").textContent = `${windowLabel()} · Top ${ranked.length}`;
+      document.getElementById("hotZones").innerHTML = ranked.length
+        ? `<div class="hot-rank">${ranked.map((zone, index) => `<div class="hot-rank-row" title="${escapeHtml(zone.latestAddress || "")}">
+            <div class="hot-rank-no">${index + 1}</div>
+            <div class="hot-rank-area">${escapeHtml(zone.area)}</div>
+            <div class="hot-rank-score">${escapeHtml(zone.score)}</div>
+            <div class="hot-rank-count">${escapeHtml(zone.count)}件</div>
+          </div>`).join("")}</div>`
+        : "目前熱區不足，仍需觀察";
+    }
+
+    function renderDecisionStatus(allPlaces, notifications = []) {
+      const currentArea = getCurrentArea();
+      const start = getObservationStart();
+      const active = isObservationActive();
+      const latestNotification = notifications.slice().reverse().find((item) => item.timestamp || item.received_at || item.time);
+      const latestTime = latestNotification ? (latestNotification.timestamp || latestNotification.received_at || latestNotification.time) : "";
+      let observationCount = 0;
+      if (start) {
+        const end = getObservationEnd();
+        observationCount = allPlaces.filter((place) => {
+          const date = parseTimestamp(place.timestamp);
+          return date && date >= start && date <= end && place.kind !== "description";
+        }).length;
+      }
+      const lastSignal = document.getElementById("lastSignalStatus");
+      if (lastSignal) lastSignal.textContent = timeAgoText(latestTime);
+      document.getElementById("decisionStatus").innerHTML = [
+        `<div>目前位置：<strong>${escapeHtml(currentArea || "其他 / 未設定")}</strong></div>`,
+        `<div>觀察狀態：${start ? (active ? "觀察中" : "已停止") : "尚未開始"}</div>`,
+        `<div>觀察地址：${observationCount} 筆</div>`,
+        `<div>觀察時間：${start ? escapeHtml(formatDuration(getObservationEnd() - start)) : "--"}</div>`
+      ].join("");
+    }
+
+    function syncMapWindow() {
+      const frame = document.getElementById("mapFrameEmbed");
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: "drivepilot:setTimeWindow", value: selectedWindow() }, "*");
+      }
+    }
+
+    function requestMapResize(reason = "dashboard layout") {
+      const frame = document.getElementById("mapFrameEmbed");
+      if (frame && frame.contentWindow) {
+        frame.contentWindow.postMessage({ type: "drivepilot:invalidateMapSize", reason }, "*");
+      }
+    }
+
+    function updateMapPointsDebug(payload = {}) {
+      const readStatus = document.getElementById("mapPointsReadStatus");
+      const csvRows = document.getElementById("mapPointsCsvRows");
+      const validRows = document.getElementById("mapPointsValidRows");
+      const filterLabel = document.getElementById("mapPointsFilterLabel");
+      const filteredRows = document.getElementById("mapPointsFilteredRows");
+      const renderedRows = document.getElementById("mapPointsRenderedRows");
+      const loadedAt = document.getElementById("mapPointsLoadedAt");
+      if (readStatus) readStatus.textContent = payload.status || "--";
+      if (csvRows) csvRows.textContent = formatCount(payload.csvRows);
+      if (validRows) validRows.textContent = formatCount(payload.validRows);
+      if (filterLabel) filterLabel.textContent = payload.filterLabel || windowLabel();
+      if (filteredRows) filteredRows.textContent = formatCount(payload.filteredMarkers);
+      if (renderedRows) renderedRows.textContent = formatCount(payload.renderedMarkers);
+      if (loadedAt) loadedAt.textContent = payload.loadedAt || "--";
+      const filterStatus = document.getElementById("filterStatus");
+      if (filterStatus && payload.filterLabel) {
+        filterStatus.textContent = `${payload.filterLabel} · ${formatCount(payload.renderedMarkers)} marker · ${payload.loadedAt || "--"}`;
+      }
+    }
+
+    function tuneEmbeddedMapShell() {
+      const frame = document.getElementById("mapFrameEmbed");
+      try {
+        const doc = frame && (frame.contentDocument || frame.contentWindow.document);
+        if (!doc || doc.getElementById("drivepilot-dashboard-embed-css")) return;
+        const style = doc.createElement("style");
+        style.id = "drivepilot-dashboard-embed-css";
+        style.textContent = `
+          html, body { width: 100% !important; height: 100% !important; overflow: hidden !important; }
+          html, body, aside, .tools {
+            scrollbar-width: thin !important;
+            scrollbar-color: rgba(210,216,225,.68) rgba(255,255,255,.055) !important;
+          }
+          aside::-webkit-scrollbar,
+          .tools::-webkit-scrollbar { width: 8px !important; height: 8px !important; }
+          aside::-webkit-scrollbar-track,
+          .tools::-webkit-scrollbar-track {
+            background: rgba(255,255,255,.045) !important;
+            border-radius: 999px !important;
+          }
+          aside::-webkit-scrollbar-thumb,
+          .tools::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(225,230,238,.72), rgba(155,164,176,.56)) !important;
+            border: 2px solid rgba(31,32,35,.92) !important;
+            border-radius: 999px !important;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.18) !important;
+          }
+          aside::-webkit-scrollbar-thumb:hover,
+          .tools::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(240,244,250,.82), rgba(180,188,200,.66)) !important;
+          }
+          .app { grid-template-columns: minmax(0, 1fr) !important; width: 100% !important; height: 100% !important; min-width: 0 !important; min-height: 0 !important; overflow: hidden !important; }
+          aside { display: none !important; }
+          .dp-toggle-tools {
+            display: none !important;
+            position: sticky !important;
+            top: 8px !important;
+            z-index: 20 !important;
+            width: 100% !important;
+            min-height: 36px !important;
+            border: 1px solid rgba(255,255,255,.12) !important;
+            border-radius: 12px !important;
+            background: rgba(42,43,47,.9) !important;
+            color: #f1f1f1 !important;
+            font: 700 12px "Microsoft JhengHei", Arial, sans-serif !important;
+            cursor: pointer !important;
+            writing-mode: horizontal-tb !important;
+          }
+          .app.dp-tools-collapsed .dp-toggle-tools { display: none !important; }
+          header { padding: 10px 12px !important; }
+          h1 { font-size: 15px !important; margin-bottom: 2px !important; }
+          .hint { display: none !important; }
+          .tools { padding: 8px 10px !important; max-height: 76px !important; overflow-y: auto !important; }
+          .tools button { padding: 5px 7px !important; margin: 0 5px 5px 0 !important; font-size: 11px !important; }
+          .group-legend { padding: 10px 12px !important; }
+          .legend-row:nth-child(n+6) { display: none !important; }
+          .recent { padding: 10px 12px !important; }
+          #list, .recent:last-of-type { display: none !important; }
+          .map-stage, body > main > section { width: 100% !important; height: 100% !important; min-width: 0 !important; min-height: 0 !important; }
+          .fallback { left: 14px !important; top: 12px !important; max-width: 238px !important; background: rgba(32,33,35,.82) !important; border-color: rgba(255,255,255,.08) !important; }
+          #map, .leaflet-container { width: 100% !important; height: 100% !important; min-width: 0 !important; min-height: 0 !important; }
+          @media (max-width: 760px) {
+            .app { grid-template-columns: minmax(0, 1fr) !important; }
+            .fallback { left: 12px !important; }
+          }
+        `;
+        doc.head.appendChild(style);
+        const app = doc.querySelector(".app");
+        const aside = doc.querySelector("aside");
+        if (app && aside && !doc.getElementById("dp-toggle-tools")) {
+          const button = doc.createElement("button");
+          button.id = "dp-toggle-tools";
+          button.className = "dp-toggle-tools";
+          button.type = "button";
+          button.textContent = "收合";
+          button.addEventListener("click", () => {
+            app.classList.toggle("dp-tools-collapsed");
+            button.textContent = app.classList.contains("dp-tools-collapsed") ? "工具" : "收合";
+          });
+          aside.insertBefore(button, aside.firstChild);
+        }
+      } catch (_) {}
+    }
+
+    async function refresh() {
+      try {
+        const [notificationsText, placesText, diagnosticsText, markerText, unresolvedText] = await Promise.all([
+          loadText("data/notifications.jsonl"),
+          loadText("data/places.csv"),
+          loadText("data/parser_diagnostics.jsonl"),
+          loadText("data/map_points.csv"),
+          loadText("data/unresolved_addresses.csv")
+        ]);
+        markerLocationKeys = buildMarkerLocationKeySet(markerText);
+        unresolvedLocationKeys = buildUnresolvedLocationKeySet(unresolvedText);
+        const notifications = parseNotifications(notificationsText).filter((item) => withinWindow(item.timestamp));
+        const diagnostics = parseNotifications(diagnosticsText);
+        const allPlaces = parsePlaces(placesText);
+        const places = allPlaces.filter((place) => withinWindow(place.timestamp));
+
+        document.getElementById("filterStatus").textContent = `${windowLabel()} · ${places.length} 點 · ${new Date().toLocaleTimeString()}`;
+        document.getElementById("notificationStatus").textContent = `${windowLabel()} · ${notifications.length} 筆`;
+        document.getElementById("placeStatus").textContent = `${windowLabel()} · ${places.length} 筆`;
+
+        renderRecent("recentNotifications", notifications, notificationListRow);
+        renderDiagnostics(diagnostics);
+        renderRecent("recentPlaces", places, placeListRow);
+        renderHotZones(places);
+        renderDecisionStatus(allPlaces, notifications);
+        syncMapWindow();
+      } catch (_) {
+        document.getElementById("recentNotifications").textContent = "資料尚未就緒";
+        document.getElementById("hotZones").textContent = "資料尚未就緒";
+        document.getElementById("recentPlaces").textContent = "資料尚未就緒";
+      }
+    }
+
+    if (window.location.hash === "#mapFrame") {
+      history.replaceState(null, "", `${window.location.pathname}${window.location.search}`);
+      window.scrollTo(0, 0);
+    }
+    refresh();
+    function updateTopClock() {
+      const clock = document.getElementById("topClock");
+      if (clock) clock.textContent = new Date().toLocaleTimeString();
+    }
+    updateTopClock();
+    setInterval(updateTopClock, 1000);
+    loadSignalStats24h();
+    loadMarkerHealth();
+    setInterval(loadSignalStats24h, 60000);
+    setInterval(loadMarkerHealth, 60000);
+    document.addEventListener("click", async (event) => {
+      const mapAction = event.target.closest("[data-map-action]");
+      if (mapAction) {
+        const frame = document.getElementById("mapFrameEmbed");
+        const actionId = mapAction.getAttribute("data-map-action");
+        try {
+          const doc = frame && (frame.contentDocument || frame.contentWindow.document);
+          const target = doc && doc.getElementById(actionId);
+          if (target) target.click();
+          else if (actionId === "fitMarkers" && frame && frame.contentWindow) {
+            frame.contentWindow.postMessage({ type: "drivepilot-fit-markers" }, "*");
+          }
+        } catch (_) {}
+        return;
+      }
+      const button = event.target.closest("[data-copy-address]");
+      if (!button) return;
+      try {
+        await navigator.clipboard.writeText(button.getAttribute("data-copy-address") || "");
+        button.textContent = "已複製";
+      } catch (_) {
+        button.textContent = "複製失敗";
+      }
+    });
+    document.getElementById("mapFrameEmbed").addEventListener("load", () => {
+      tuneEmbeddedMapShell();
+      syncMapWindow();
+      requestMapResize("iframe load immediate");
+      setTimeout(() => requestMapResize("iframe load 150ms"), 150);
+      setTimeout(() => requestMapResize("iframe load 300ms"), 300);
+      setTimeout(() => requestMapResize("iframe load 600ms"), 600);
+    });
+    window.addEventListener("message", (event) => {
+      if (event.data && event.data.type === "drivepilot-map-debug") {
+        updateMapPointsDebug(event.data.payload || {});
+      }
+    });
+    document.getElementById("timeWindow").addEventListener("change", refresh);
+    setInterval(refresh, 15000);
+  </script>
+</body>
+</html>

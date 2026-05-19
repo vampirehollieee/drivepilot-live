@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="DrivePilot">
+  <rect width="512" height="512" rx="112" fill="#121820"/>
+  <circle cx="256" cy="256" r="154" fill="#1f8f5f"/>
+  <path d="M126 300c30-78 73-118 130-118s100 40 130 118" fill="none" stroke="#f7fbff" stroke-width="32" stroke-linecap="round"/>
+  <path d="M165 315h182c19 0 35 16 35 35v22H130v-22c0-19 16-35 35-35Z" fill="#f7fbff"/>
+  <circle cx="181" cy="374" r="24" fill="#121820"/>
+  <circle cx="331" cy="374" r="24" fill="#121820"/>
+  <path d="M256 92l28 59 65 8-47 46 12 64-58-32-58 32 12-64-47-46 65-8 28-59Z" fill="#f6c744"/>
+</svg>
