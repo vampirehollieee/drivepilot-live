@@ -65,7 +65,7 @@ DIRTY_TOKENS = (
     "账号",
 )
 ADDRESS_PATTERN = re.compile(
-    r"(?:高雄市)?[\u4e00-\u9fff0-9一二三四五六七八九十]{1,8}區"
+    r"(?:Demo City)?[\u4e00-\u9fff0-9一二三四五六七八九十]{1,8}區"
     r"[\u4e00-\u9fff0-9一二三四五六七八九十]{1,16}"
     r"(?:大道|路|街|巷|弄)"
     r"[\u4e00-\u9fff0-9一二三四五六七八九十段巷弄\-之]{0,18}"
@@ -165,8 +165,8 @@ def compact_key(value: object) -> str:
 
 def variant_key(value: object) -> str:
     key = compact_key(value)
-    key = re.sub(r"^\d{3}(?=高雄市)", "", key)
-    return re.sub(r"^(?:台灣|臺灣)?高雄市", "", key)
+    key = re.sub(r"^\d{3}(?=Demo City)", "", key)
+    return re.sub(r"^(?:台灣|臺灣)?Demo City", "", key)
 
 
 def first_value(row: dict, *names: str) -> str:
@@ -412,8 +412,8 @@ def better_address(left: str, right: str) -> str:
         return left
     left_key = compact_key(left)
     right_key = compact_key(right)
-    left_city = left_key.startswith("高雄市")
-    right_city = right_key.startswith("高雄市")
+    left_city = left_key.startswith("Demo City")
+    right_city = right_key.startswith("Demo City")
     if right_city and not left_city:
         return right
     if left_city and not right_city:

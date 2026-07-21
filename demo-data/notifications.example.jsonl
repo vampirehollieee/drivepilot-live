@@ -1,0 +1,3 @@
+{"time": "2026-01-01 09:00:00", "source": "Group A", "title": "Demo Dispatch Group", "text": "Demo market signal near North Zone", "kind": "market_signal"}
+{"time": "2026-01-01 09:04:00", "source": "Group B", "title": "Night Support Group", "text": "Sample notification for Central Zone", "kind": "market_signal"}
+{"time": "2026-01-01 09:11:00", "source": "Group C", "title": "Demo Dispatch Group", "text": "Demo high-value signal, no private content", "kind": "market_signal"}

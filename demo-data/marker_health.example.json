@@ -1,0 +1,11 @@
+{
+  "generated_at": "2026-01-01 10:00:00",
+  "source_file": "map_resolved_points.csv",
+  "source_file_mtime": "2026-01-01 09:58:00",
+  "input_rows": 120,
+  "output_markers": 24,
+  "skipped_invalid_coordinates": 0,
+  "skipped_missing_address": 3,
+  "duplicate_merged": 12,
+  "backup_created": ""
+}

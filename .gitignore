@@ -1,20 +1,50 @@
-﻿config/
+# Private configuration and runtime data
+.env
+.env.*
+config/*
+!config/
+!config/*.example.txt
+live-system/notification_config.json
+live-system/place_aliases.json
 live-data/
 logs/
-*.log
+
+# Runtime outputs and sensitive artifacts
 *.jsonl
 *.csv
-*.key
-*.env
-map8_api_key.txt
-*_backup*
-*.bak
+*.log
 *.db
 *.sqlite
 *.sqlite3
-*.pyc
+*.key
+*.pem
+*.p12
+*.bak
+*backup*
+*_backup*
+
+# Keep sanitized demo data examples public
+!demo-data/
+!demo-data/*.jsonl
+!demo-data/*.csv
+!demo-data/*.json
+!docs/demo-data/
+!docs/demo-data/*.json
+
+# Local caches and build outputs
 __pycache__/
+*.pyc
+node_modules/
+venv/
+.venv/
 tmp/
 temp/
+runtime/
+build/
+dist/
+.codex/
+.agents/
+
+# OS/editor noise
 Thumbs.db
 Desktop.ini

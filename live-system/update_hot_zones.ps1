@@ -1,4 +1,4 @@
-﻿param(
+param(
     [string]$DataDir = ""
 )
 
@@ -15,7 +15,7 @@ $hotZonesPath = Join-Path $DataDir "hot_zones.json"
 
 function Get-Area {
     param([AllowNull()][string]$Address)
-    if ($Address -match "高雄市([\p{IsCJKUnifiedIdeographs}]{1,4}區)") {
+    if ($Address -match "Demo City([\p{IsCJKUnifiedIdeographs}]{1,4}區)") {
         return $matches[1]
     }
     if ($Address -match "^([\p{IsCJKUnifiedIdeographs}]{1,4}區)") {

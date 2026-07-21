@@ -1,163 +1,137 @@
 # DrivePilot Live
 
-DrivePilot Live is a local-first market-signal observation system for LINE
-ride-driving work-group notifications. It turns noisy mobile notification
-streams into a structured command-center view for market rhythm, group activity,
-location distribution, system health, and report snapshots.
+DrivePilot Live is a local-first market-signal observation system for LINE ride-driving work-group notifications. It turns noisy mobile notification streams into structured views for market rhythm, group activity, location readiness, system health, and report snapshots.
 
-This project is a public, resume-friendly version of the original workspace. It
-demonstrates the product thinking, data pipeline, frontend interfaces, and local
-automation behind DrivePilot while excluding private runtime data and
-credentials.
+This repository is the sanitized public portfolio version. It demonstrates product thinking, data-pipeline design, local automation, and frontend reporting while excluding private runtime data and credentials.
 
-DrivePilot Live is not an auto-order tool. It does not operate LINE, accept
-jobs, make dispatch decisions, predict income, or automate user actions.
+DrivePilot Live is not an auto-order tool. It does not operate LINE, accept jobs, make dispatch decisions, predict income, score drivers, or automate user actions.
 
 ## Overview
 
-DrivePilot Live was built to help a driver understand market activity from
-multiple LINE work groups without manually scanning every notification. The
-system receives forwarded Android notifications, parses market-relevant signals,
-organizes location and group activity data, and presents the results through
-desktop, mobile, live map, and Market Console views.
+DrivePilot was built to help a driver understand market activity across multiple fast-moving LINE work groups without manually scanning every notification. The system receives forwarded Android notifications, parses market-relevant signals, organizes address and group activity data, and presents the result through desktop, mobile, live map, and Market Console views.
 
-The project focuses on local-first reliability: the operator can inspect each
-generated data artifact, run maintenance scripts manually, and verify the system
-state without relying on a hosted backend.
+The implementation is intentionally local-first. Runtime artifacts are plain JSON / JSONL / CSV files so the operator can inspect the data chain, rebuild reports manually, and verify system health without relying on a hosted backend.
 
 ## Problem
 
-LINE ride-driving work groups can generate a high volume of fast-moving
-notifications. Useful market signals are mixed with repeated posts, unclear
-addresses, group chatter, and time-sensitive updates.
+LINE ride-driving work groups can be noisy and time-sensitive:
 
-The core problems were:
-
-- Important market signals were easy to miss in noisy notification streams.
-- Address text extraction and coordinate readiness needed to be treated as
-  separate states.
-- Map markers needed an auditable source instead of directly trusting raw parser output.
-- Mobile viewing needed to be lightweight and quick while driving.
-- The system needed observability around parser output, marker health, queue
-  status, and data freshness.
-- Private messages, addresses, and credentials needed to stay local.
+- Useful market signals are mixed with repeated posts and group chatter.
+- Address extraction confidence can be mistaken for actual coordinate readiness.
+- Map markers need an auditable source instead of trusting raw parser output.
+- Mobile viewing needs to be lightweight and quick.
+- The system needs visibility into parser output, marker health, queue status, data freshness, and report quality.
+- Private messages, addresses, and credentials must stay local.
 
 ## Solution
 
-DrivePilot Live converts notification streams into structured local data and
-dashboard views:
+DrivePilot converts notification streams into structured local data and dashboard views:
 
-1. MacroDroid forwards selected Android notifications to a local receiver.
-2. The receiver stores notification records in a local file-based data layer.
-3. Parser and resolver scripts extract signal metadata, address candidates,
-   confidence hints, and location status.
-4. Missing-coordinate and marker-builder workflows separate unresolved
-   candidates from confirmed marker output.
-5. Market report builders summarize recent signal volume, group activity,
-   marker health, and queue status.
-6. Frontend views display the information through a desktop dashboard, mobile
-   dashboard, live map, and Market Console.
+1. Android / MacroDroid forwards selected notifications to a local receiver.
+2. The receiver writes notification records to the private local data layer.
+3. Parser and resolver scripts extract signal metadata, address candidates, confidence hints, and location state.
+4. Missing-coordinate and marker-builder workflows separate unresolved candidates from confirmed map marker output.
+5. Market report builders summarize signal volume, group activity, marker health, and queue status.
+6. Frontend views expose the results through Desktop Dashboard, Mobile Dashboard, Live Map, and Market Console.
 
-The result is an observation tool for market awareness, not a dispatch or
-automation system.
+## System Flow
+
+```text
+LINE Notification
+-> Android / MacroDroid
+-> Local Receiver
+-> Parser / Resolver
+-> Structured Local Data
+-> Queue / Marker / Health / Report Builders
+-> Dashboard / Mobile Dashboard / Live Map / Market Console
+```
+
+More detail: [docs/system-flow.md](docs/system-flow.md) and [docs/architecture.md](docs/architecture.md).
 
 ## Core Features
 
 - Local HTTP notification receiver for Android notification forwarding.
-- Parser pipeline for market signals, address-like text, source/group metadata,
-  and confidence classification.
-- Clear separation between parser confidence and actual map-coordinate readiness.
+- Parser / resolver pipeline for market signals, address-like text, source/group metadata, and confidence classification.
+- Clear separation between parser confidence and coordinate readiness.
 - Missing Coordinate Queue for unresolved address candidates.
 - MAP8 review/import workflow with explicit cache and review boundaries.
-- Marker Builder that produces the formal map marker output from resolved data.
-- Marker Health reporting for marker counts, invalid coordinates, missing
-  addresses, and build timestamps.
-- 24-hour signal statistics with short-window deduplication.
+- Marker Builder that produces formal map marker output from resolved data.
+- Marker Health reporting for marker counts, invalid coordinates, missing addresses, and build timestamps.
+- 24HR signal statistics with duplicate visibility.
 - Market Report JSON builder for deterministic report snapshots.
-- Desktop dashboard, mobile dashboard, live map, and standalone Market Console pages.
+- Desktop Dashboard, Mobile Dashboard, Live Map, and standalone Market Console.
 - Windows-friendly BAT and PowerShell entrypoints for local operation.
 
 ## Technical Architecture
 
-```text
-LINE work-group notifications
--> MacroDroid Android notification capture
--> Local HTTP POST receiver
--> DrivePilot parser / resolver scripts
--> Local file-based data layer
--> Queue, marker, health, and report builders
--> Dashboard / Mobile Dashboard / Live Map / Market Console
--> Optional Discord notification path
-```
+DrivePilot uses explicit local artifacts instead of hidden service state:
 
-Key architectural decisions:
+- `live-system/` contains receiver, server, parser-adjacent utilities, builders, health checks, MAP8 review tools, and routine wrappers.
+- `live-map/` contains the static dashboard, mobile dashboard, live map, and Market Console pages.
+- `demo-data/` contains sanitized sample outputs for portfolio review.
+- Private runtime data is excluded from this public repository.
 
-- Local-first data flow using generated JSON and CSV artifacts.
-- Explicit builder scripts instead of hidden background database mutations.
-- Separate outputs for unresolved candidates, reviewed coordinates, formal map
-  markers, marker health, and market reports.
-- Frontend pages read generated artifacts with cache busting.
-- Public copy excludes private runtime data and credentials.
+Runtime script notes: [live-system/README.md](live-system/README.md).
 
 ## Technology Used
 
-- Python for parsing support scripts, statistics builders, coordinate queue
-  generation, marker output, and market report generation.
-- PowerShell for the local receiver, local server workflow, status checks, and
-  Windows automation.
+- PowerShell for the local receiver, server workflow, status checks, and Windows automation.
+- Python for statistics builders, coordinate queue generation, marker output, report generation, and support tools.
 - BAT files for operator-friendly manual entrypoints.
-- HTML, CSS, and vanilla JavaScript for the dashboard and Market Console interfaces.
-- Leaflet for map visualization.
-- JSON, JSONL, and CSV artifacts for a transparent local data layer.
-- Git for the sanitized public portfolio version.
-- `live-system/README.md` explains the runtime scripts.
-- `docs/demo-data/` contains sanitized sample outputs.
+- HTML, CSS, and vanilla JavaScript for dashboard and console interfaces.
+- Leaflet / OpenStreetMap for map visualization.
+- JSON, JSONL, and CSV as transparent local data artifacts.
+- Git for the sanitized portfolio workflow.
 
 ## What This Project Demonstrates
 
-- Building a real-world local operations console from messy notification data.
-- Designing a safety boundary between observation, alerting, and automation.
-- Creating auditable data pipelines with intermediate artifacts.
-- Separating parser confidence, coordinate resolution, marker readiness, and UI
-  display states.
-- Implementing lightweight frontend dashboards without a large framework.
-- Designing recovery and health-check workflows for a local Windows-based system.
-- Preparing a privacy-safe public version of a project that originally handled
-  sensitive runtime data.
+- Turning messy real-world notification streams into a local operations console.
+- Designing safety boundaries between observation, alerting, and automation.
+- Building auditable data pipelines with intermediate artifacts.
+- Separating parser confidence, coordinate resolution, marker readiness, and UI display states.
+- Implementing lightweight dashboards without a large frontend framework.
+- Designing recovery and health-check workflows for a local Windows system.
+- Preparing a privacy-safe public version of a sensitive local project.
 
 ## Project Outcomes
 
 - End-to-end local pipeline from mobile notifications to market dashboard views.
-- Dedicated Market Console for data-driven market report review.
+- Dedicated Market Console for deterministic report review.
 - Formal marker-output pipeline with marker health metrics.
 - Missing-coordinate queue and review workflows for controlled coordinate completion.
-- 24-hour statistics with deduped signal counts and duplicate visibility.
-- Clearer UI semantics around parsed address confidence versus actual location
-  readiness.
+- 24HR statistics with raw, deduped, and duplicate signal visibility.
 - Sanitized public repository suitable for portfolio review.
+
+## Repository Structure
+
+```text
+live-system/       Runtime scripts and local builders
+live-map/          Desktop dashboard, mobile dashboard, live map, Market Console
+docs/              Architecture, privacy, runtime notes, resume summary, screenshots
+demo-data/         Sanitized sample JSON / JSONL / CSV outputs
+config/            Example-only configuration placeholders
+*.bat              Windows entrypoints for the private local workflow
+```
+
+## Demo Data
+
+The `demo-data/` folder contains fake examples only. It uses placeholder groups and locations such as `Group A`, `Group B`, `Demo Location`, `North Zone`, and `Central Zone`.
+
+It does not contain real LINE messages, real group names, real addresses, phone numbers, coordinates, API keys, or webhook URLs.
 
 ## Safety and Privacy
 
-This repository is a sanitized public copy. It intentionally does not include:
+This repository intentionally excludes:
 
 - Real LINE raw messages.
-- Live operational data.
+- Real group names and notification text.
+- Real addresses, phone numbers, and coordinates.
+- API keys, tokens, passwords, and webhook URLs.
 - `live-data/` runtime files.
-- `config/` private configuration.
-- API keys.
-- Webhook URLs.
-- Private address caches.
-- Phone numbers or personal data.
-- Local logs or JSONL diagnostic records.
+- Private `notification_config.json` and `place_aliases.json`.
+- Logs, databases, caches, build outputs, and local machine paths.
 
-DrivePilot Live does not:
-
-- Operate LINE.
-- Auto-accept orders.
-- Make dispatch decisions.
-- Predict income.
-- Provide driver scoring.
-- Bypass platform rules.
+Privacy details: [docs/privacy-boundaries.md](docs/privacy-boundaries.md).
 
 ## Screenshots
 
@@ -173,6 +147,16 @@ DrivePilot Live does not:
 
 ![Market Report](docs/screenshots/market-report.png)
 
+## Project Documentation
+
+- [Project Case Study](docs/project-docs/drivepilot-project-case-study.pdf)`n  Public resume-oriented project summary covering product context, system architecture, implementation highlights, privacy handling, AI-assisted development workflow, and roadmap.
+- [Architecture](docs/architecture.md)
+- [System Flow](docs/system-flow.md)
+- [Privacy Boundaries](docs/privacy-boundaries.md)
+- [Runtime Notes](docs/runtime-notes.md)
+- [Resume Summary](docs/resume-summary.md)
+- [Roadmap](docs/roadmap.md)
+
 ## My Role
 
 I designed and implemented the DrivePilot Live workflow end to end:
@@ -180,17 +164,11 @@ I designed and implemented the DrivePilot Live workflow end to end:
 - Defined the local-first product scope and safety boundaries.
 - Built the notification ingestion and local server workflow.
 - Implemented parser/resolver support scripts and data builders.
-- Designed the missing-coordinate, marker-builder, marker-health, and
-  market-report pipeline.
+- Designed the missing-coordinate, marker-builder, marker-health, and market-report pipeline.
 - Built the desktop, mobile, live map, and Market Console frontend views.
-- Added Windows-friendly operational scripts for manual refresh, status checks,
-  and local routines.
-- Sanitized the project into a public GitHub-ready portfolio version without
-  exposing private runtime data.
+- Added Windows-friendly operational scripts for manual refresh, status checks, and local routines.
+- Sanitized the project into a public GitHub-ready portfolio version without exposing private runtime data.
 
-## Project Documentation
+## Project Status
 
-- [Project Case Study](docs/project-docs/drivepilot-project-case-study.pdf)  
-  A public resume-oriented project summary covering product context, system
-  architecture, implementation highlights, privacy handling, AI-assisted
-  development workflow, and roadmap.
+This is a portfolio-safe public repository. It is suitable for code review and resume discussion, not for production deployment as-is. Real runtime data and credentials must remain outside Git.

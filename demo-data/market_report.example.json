@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-01-01 10:00:00",
+  "report_version": "public-demo",
+  "status": {
+    "market_data": "ok",
+    "marker_data": "ok",
+    "queue_data": "ok",
+    "overall": "ok"
+  },
+  "market_60m": {
+    "signal_count": 18,
+    "located_count": 12,
+    "hot_event_count": 2,
+    "personal_alert_count": 1,
+    "last_signal_time": "2026-01-01 09:58:00"
+  },
+  "market_24h": {
+    "generated_at": "2026-01-01 10:00:00",
+    "raw_count": 120,
+    "deduped_count": 84,
+    "duplicate_count": 36,
+    "duplicate_ratio": 0.3
+  },
+  "markers": {
+    "generated_at": "2026-01-01 10:00:00",
+    "output_markers": 24,
+    "input_rows": 120,
+    "duplicate_merged": 12,
+    "skipped_invalid_coordinates": 0,
+    "skipped_missing_address": 3
+  },
+  "missing_coordinate_queue": {
+    "total_candidates": 40,
+    "good_count": 18,
+    "suspicious_count": 12,
+    "rejected_count": 10,
+    "final_queue_count": 30,
+    "dedupe_merged_count": 8
+  },
+  "hot_zones": [
+    {
+      "name": "North Zone",
+      "count": 18,
+      "last_seen": "2026-01-01 09:50:00"
+    },
+    {
+      "name": "Central Zone",
+      "count": 11,
+      "last_seen": "2026-01-01 09:42:00"
+    }
+  ],
+  "active_groups": [
+    {
+      "name": "Group A",
+      "count": 42,
+      "last_seen": "2026-01-01 09:55:00"
+    },
+    {
+      "name": "Group B",
+      "count": 31,
+      "last_seen": "2026-01-01 09:51:00"
+    }
+  ],
+  "high_value_signals": [
+    {
+      "time": "2026-01-01 09:58:00",
+      "area_or_address": "North Zone",
+      "source": "Group A",
+      "label": "Address Signal",
+      "summary": "Demo market signal only"
+    }
+  ],
+  "summary": {
+    "market_signal_level": "normal",
+    "data_health_note": "Demo data sources are healthy",
+    "operator_note": "Market signal view is for observation only",
+    "last_signal_time": "2026-01-01 09:58:00",
+    "report_note": "Demo report with sanitized data"
+  }
+}

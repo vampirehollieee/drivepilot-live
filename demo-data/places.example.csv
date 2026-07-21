@@ -1,0 +1,3 @@
+timestamp,group,kind,address,confidence,notification_time,note,price_note,text
+2026-01-01 09:00:00,Group A,place,Demo Location A,high,2026-01-01 09:00:00,, ,Demo market signal
+2026-01-01 09:04:00,Group B,place,Demo Location B,medium,2026-01-01 09:04:00,, ,Sample notification

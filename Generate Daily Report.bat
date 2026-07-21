@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 title Generate DrivePilot Daily Report
-cd /d "C:\Users\mar22\Documents\New project"
+cd /d "%~dp0"
 powershell -NoProfile -ExecutionPolicy Bypass -File ".\live-system\daily_report.ps1"
 if errorlevel 1 (
   echo.

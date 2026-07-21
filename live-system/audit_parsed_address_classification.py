@@ -167,7 +167,7 @@ def key_in_index(address: str, index: set[str]) -> bool:
 
 def address_features(address: str) -> dict[str, bool]:
     text = str(address or "")
-    has_city = "高雄市" in text
+    has_city = "Demo City" in text
     has_district = re.search(r"[\u4e00-\u9fff]{1,4}區", text) is not None
     has_road = re.search(r"(路|街|大道|巷|弄)", text) is not None
     has_house_number = re.search(r"[0-9０-９一二三四五六七八九十百\-之]+(?:號|号)", text) is not None

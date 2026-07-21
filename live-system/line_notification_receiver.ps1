@@ -1,9 +1,9 @@
-﻿param(
+param(
     [int]$Port = 8788,
     [string]$ListenAddress = "0.0.0.0",
     [string]$OutputDir = ".\line-notify-output",
     [string]$ConfigPath = "",
-    [string]$DefaultCity = "高雄市"
+    [string]$DefaultCity = "Demo City"
 )
 
 Set-StrictMode -Version Latest
@@ -287,7 +287,7 @@ function Get-AddressCandidates {
     $searchText = $searchText -replace "(?:低消|低銷)\s*\d+|\d+\s*/\s*\d+\s*/\s*\d+", " "
     $compact = $searchText -replace "\s+", ""
     $patterns = @(
-        "(?:高雄市)?[\p{IsCJKUnifiedIdeographs}]{1,4}區[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]+(?:路|街|大道|巷|弄)[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]*(?:號)?",
+        "(?:Demo City)?[\p{IsCJKUnifiedIdeographs}]{1,4}區[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]+(?:路|街|大道|巷|弄)[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]*(?:號)?",
         "[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]{2,}(?:路|街|大道|巷|弄)[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]*(?:號)?",
         "[\p{IsCJKUnifiedIdeographs}0-9一二三四五六七八九十之\-]{2,}(?:交流道|休息站|服務區|停車場|加油站|景觀台|咖啡|餐廳|公園|漁港)"
     )
@@ -296,8 +296,8 @@ function Get-AddressCandidates {
     foreach ($pattern in $patterns) {
         foreach ($match in [regex]::Matches($compact, $pattern)) {
             $address = $match.Value
-            if ($address -match "高雄市") {
-                $address = ($address -replace "^.*?(高雄市)", '$1')
+            if ($address -match "Demo City") {
+                $address = ($address -replace "^.*?(Demo City)", '$1')
             }
             $address = $address -replace "^起點[:：]?", ""
             $address = $address -replace "^終點[:：]?", ""
@@ -519,7 +519,7 @@ function Get-PlaceCandidates {
 
     foreach ($address in $addressesToUse) {
         $confidence = Get-AddressConfidence -Address $address
-        if ((Test-DescriptionText -Text $address) -and -not ($address -match "高雄市[\p{IsCJKUnifiedIdeographs}]{1,4}區.*(?:路|街|巷).*號")) {
+        if ((Test-DescriptionText -Text $address) -and -not ($address -match "Demo City[\p{IsCJKUnifiedIdeographs}]{1,4}區.*(?:路|街|巷).*號")) {
             $confidence = "low"
         }
         $candidates.Add([pscustomobject]@{
@@ -602,7 +602,7 @@ function Get-Kind {
 function Get-AddressConfidence {
     param([Parameter(Mandatory = $true)][string]$Address)
 
-    if ($Address -match "高雄市[\p{IsCJKUnifiedIdeographs}]{1,4}區.*(?:路|街|巷).*號") {
+    if ($Address -match "Demo City[\p{IsCJKUnifiedIdeographs}]{1,4}區.*(?:路|街|巷).*號") {
         return "high"
     }
     if ($Address -match "[\p{IsCJKUnifiedIdeographs}]{1,4}區.*(?:路|街|巷)") {

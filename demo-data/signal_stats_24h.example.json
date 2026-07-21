@@ -1,0 +1,21 @@
+{
+  "generated_at": "2026-01-01 10:00:00",
+  "source_file_mtime": "2026-01-01 09:59:00",
+  "raw_count": 120,
+  "deduped_count": 84,
+  "duplicate_count": 36,
+  "top_groups": [
+    {
+      "name": "Group A",
+      "count": 42,
+      "last_seen": "2026-01-01 09:55:00"
+    }
+  ],
+  "top_zones": [
+    {
+      "name": "North Zone",
+      "count": 18,
+      "last_seen": "2026-01-01 09:50:00"
+    }
+  ]
+}

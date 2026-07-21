@@ -233,7 +233,7 @@ def candidate_address_ok(address: str) -> bool:
 def extract_road_name(address: str) -> str:
     text = clean_text(address)
     text = re.sub(r"^.*[縣市].*[區鄉鎮]", "", text)
-    text = re.sub(r"^高雄市", "", text)
+    text = re.sub(r"^Demo City", "", text)
     text = re.sub(r"^.*[區鄉鎮]", "", text)
     match = re.search(r"([\u4e00-\u9fffA-Za-z0-9一二三四五六七八九十]+(?:大道|路|街))", text)
     return match.group(1) if match else ""
@@ -321,7 +321,7 @@ def is_high_confidence(original: str, result: dict[str, Any]) -> bool:
     return (
         result.get("status") == "OK"
         and hint == "standardized"
-        and result.get("city") == "高雄市"
+        and result.get("city") == "Demo City"
         and bool(clean_text(result.get("town")))
         and isinstance(lat, float)
         and isinstance(lng, float)

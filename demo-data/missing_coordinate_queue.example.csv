@@ -1,0 +1,2 @@
+address,count,last_seen,source,sample_text,reason,quality,quality_reason
+Demo Location C,2,2026-01-01 09:20:00,notifications.example.jsonl,Demo unresolved signal,queryable_address_missing_coordinates,good,demo address

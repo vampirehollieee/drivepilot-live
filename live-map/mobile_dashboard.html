@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
@@ -1201,7 +1201,7 @@
     }
 
     function getArea(address) {
-      const match = String(address || "").match(/高雄市([\u4e00-\u9fff]{1,4}區)|^([\u4e00-\u9fff]{1,4}區)/);
+      const match = String(address || "").match(/Demo City([\u4e00-\u9fff]{1,4}區)|^([\u4e00-\u9fff]{1,4}區)/);
       return match ? (match[1] || match[2]) : "未知";
     }
 

@@ -1,18 +1,27 @@
 [
   {
-    "aliases": ["Demo Station", "North Hub"],
+    "aliases": [
+      "Demo Station",
+      "North Hub"
+    ],
     "address": "Demo City North Zone",
     "kind": "place_alias",
     "confidence": "high"
   },
   {
-    "aliases": ["Central Demo Point", "Central Hub"],
+    "aliases": [
+      "Central Demo Point",
+      "Central Hub"
+    ],
     "address": "Demo City Central Road",
     "kind": "place_alias",
     "confidence": "high"
   },
   {
-    "aliases": ["South Demo Point", "South Hub"],
+    "aliases": [
+      "South Demo Point",
+      "South Hub"
+    ],
     "address": "Demo City South District",
     "kind": "place_alias",
     "confidence": "high"
